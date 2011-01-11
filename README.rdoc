@@ -4,12 +4,12 @@ I'm only planning on making the methods I need UTF8-aware, if you need others I 
 
 == Example
 
-    str = "你好世界"
-    str.length # => 12
-    str[0] # => 228
-    str.chars.to_a.inspect # => ["\344", "\275", "\240", "\345", "\245", "\275", "\344", "\270", "\226", "\347", "\225", "\214"]
-    
-    utf8_str = str.as_utf8
-    utf8_str.length # => 4
-    utf8[0] # => 你
-    utf8.chars.to_a.inspect # => ["你", "好", "世", "界"]
+  str = "你好世界"
+  str.length # 12
+  str[0] # 228
+  str.chars.to_a.inspect # ["\344", "\275", "\240", "\345", "\245", "\275", "\344", "\270", "\226", "\347", "\225", "\214"]
+
+  utf8_str = "你好世界".as_utf8
+  utf8_str.length # 4
+  utf8[0] #  你
+  utf8.chars.to_a.inspect # ["你", "好", "世", "界"]
