@@ -1,3 +1,15 @@
 = A lightweight UTF8-aware String class meant for use Ruby 1.8.x written in C
 
-Currently this library only overrides the few methods I need to be UTF8-aware. I'll try to add support for more methods in the future, but for now I await pull requests :)
+I'm only planning on making the methods I need UTF8-aware, if you need others I welcome pull requests :)
+
+== Example
+
+    str = "從 Ruby1.8你好！"
+    str.length # => 20
+    str[0] # => 229
+    str.chars.to_a.inspect # => ["\345", "\276", "\236", " ", "R", "u", "b", "y", "1", ".", "8", "\344", "\275", "\240", "\345", "\245", "\275", "\357", "\274", "\201"]
+    
+    utf8_str = str.as_utf8
+    utf8_str.length # => 12
+    utf8[0] # => 從
+    utf8.chars.to_a.inspect # => ["從", " ", "R", "u", "b", "y", "1", ".", "8", "你", "好", "！"]
