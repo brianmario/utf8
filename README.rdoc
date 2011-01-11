@@ -11,5 +11,5 @@ I'm only planning on making the methods I need UTF8-aware, if you need others I 
 
   utf8_str = "你好世界".as_utf8
   utf8_str.length # 4
-  utf8[0] #  你
+  utf8[0] # 你
   utf8.chars.to_a.inspect # ["你", "好", "世", "界"]
