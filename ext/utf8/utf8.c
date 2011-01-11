@@ -6,7 +6,7 @@
 
 #define AS_UTF8(str) rb_funcall(str, intern_as_utf8, 0)
 
-static int8_t charLen(unsigned char *in, size_t in_len) {
+static inline int8_t charLen(unsigned char *in, size_t in_len) {
   if (in_len > 0) {
     unsigned char curChar, *start;
 
