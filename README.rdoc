@@ -1,4 +1,4 @@
-= A lightweight UTF8-aware String class meant for use Ruby 1.8.x written in C
+= A lightweight UTF8-aware String class meant for use with Ruby 1.8.x and is written in C
 
 I'm only planning on making the methods I need UTF8-aware, if you need others I welcome pull requests :)
 
