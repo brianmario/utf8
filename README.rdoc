@@ -1,6 +1,6 @@
-= A lightweight UTF8-aware String class meant for use with Ruby 1.8.x and is written in C
+= A lightweight UTF8-aware String class meant for use with Ruby 1.8.x
 
-I'm only planning on making the methods I need UTF8-aware, if you need others I welcome pull requests :)
+The scanning code is implemented in C (would love a Java version as well, if any of you want to help with that).
 
 == Example
 
@@ -13,3 +13,9 @@ I'm only planning on making the methods I need UTF8-aware, if you need others I 
   utf8_str.length # 4
   utf8[0] # 你
   utf8.chars.to_a.inspect # ["你", "好", "世", "界"]
+
+== Disclaimer
+
+I'm only planning on making the methods I need UTF8-aware, if you need others I welcome pull requests :)
+
+The String::UTF8#[] API isn't fully supported yet, and may never support regular expressions. I'll update this readme as I make progress.
