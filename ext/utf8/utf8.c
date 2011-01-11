@@ -74,7 +74,6 @@ static size_t totalCharCount(unsigned char *in, size_t in_len) {
   return total;
 }
 
-
 /* Ruby shit */
 #include <ruby.h>
 static VALUE intern_as_utf8;
@@ -107,7 +106,7 @@ static VALUE rb_cString_UTF8_each_char(VALUE self) {
 }
 
 static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
-  unsigned char *str = (unsigned char *)RSTRING_PTR(self);
+  unsigned char *str = (unsigned char *)RSTRING_PTR(self), *start = str;
   size_t len = RSTRING_LEN(self);
 
   if (len == 0) return Qnil;
@@ -118,10 +117,39 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     }
 
     // [x,y] syntax
-    // size_t start = NUM2LONG(argv[0]), len = NUM2LONG(argv[1]);
-    // return BLAH
+    long wantPos = NUM2LONG(argv[0]), curPos = 0, wantLen = NUM2LONG(argv[1]);
+    int8_t curCharLen = 0;
+    unsigned char *offset = str;
+
+    if (wantPos < 0) rb_raise(rb_eArgError, "Negative indices aren't supported yet");
+
+    // scan until starting position
+    curCharLen = charLen(str, len);
+    while (curPos < wantPos) {
+      str += curCharLen;
+      curCharLen = charLen(str, len);
+      curPos++;
+    }
+
+    // now scan until we have the number of chars asked for
+    curPos = 1;
+    offset = str;
+    str += curCharLen;
+    curCharLen = charLen(str, len);
+    while (curPos < wantLen) {
+      str += curCharLen;
+      curCharLen = charLen(str, len);
+      curPos++;
+
+      // if we're about to step out of bounds, stop
+      if ((size_t)(str-start) >= len) {
+        break;
+      }
+    }
+
+    return AS_UTF8(rb_str_new((char *)offset, str-offset));
   }
- 
+
   if (argc != 1) {
     rb_raise(rb_eArgError, "wrong number of arguments (%d for 1)", argc);
   }

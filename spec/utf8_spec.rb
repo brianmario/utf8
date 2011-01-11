@@ -6,13 +6,7 @@ describe String::UTF8 do
     @char_array = ["怎", "麼", "也", "沒", "人", "寫", "了", "這", "個", "嗎"]
     @str = @char_array.join
     @utf8 = @str.as_utf8
-    @utf8_len = begin
-      if defined? Encoding
-        @str.force_encoding('utf-8').length
-      else
-        10
-      end
-    end
+    @utf8_len = @char_array.size
   end
 
   it "should extend String, adding an as_utf8 method that wraps the string" do
@@ -24,9 +18,9 @@ describe String::UTF8 do
     raw = @utf8.as_raw
     raw.class.should eql(String)
     if defined? Encoding
-      raw.length.should eql(10)
+      raw.length.should eql(@utf8_len)
     else
-      raw.length.should eql(30)
+      raw.length.should eql(@char_array.join.size)
     end
   end
 
@@ -72,6 +66,18 @@ describe String::UTF8 do
         utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
         utf8_char.should eql(char)
       end
+    end
+
+    it "substring by start and length should be utf8-aware" do
+      @utf8[1, 4].should eql(@char_array[1, 4].join)
+      @utf8[0, 6].should eql(@char_array[0, 6].join)
+
+      @utf8[6, 6].should eql(@char_array[6, 6].join)
+
+      # we don't support negative starting indices yet
+      lambda {
+        @utf8[-1, 2].should eql(@char_array[-1, 2].join)
+      }.should raise_error(ArgumentError)
     end
   end
 end
