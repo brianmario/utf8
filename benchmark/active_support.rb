@@ -23,6 +23,7 @@ Benchmark.bmbm do |x|
     as_mb.length
   }
 end
+
 puts "\n\n"
 Benchmark.bmbm do |x|
   x.report {

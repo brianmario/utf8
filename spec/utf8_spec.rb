@@ -72,7 +72,7 @@ describe String::UTF8 do
       @utf8[1, 4].should eql(@char_array[1, 4].join)
       @utf8[0, 6].should eql(@char_array[0, 6].join)
 
-      @utf8[6, 6].should eql(@char_array[6, 6].join)
+      @utf8[6, 100].should eql(@char_array[6, 100].join)
 
       # we don't support negative starting indices yet
       lambda {
