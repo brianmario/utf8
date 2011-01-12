@@ -36,3 +36,16 @@ Benchmark.bmbm do |x|
     as_mb[1024, 1024]
   }
 end
+
+puts "\n\n"
+Benchmark.bmbm do |x|
+  x.report {
+    puts "String::UTF8#[-start, len]"
+    utf8[-1024, 1024]
+  }
+
+  x.report {
+    puts "ActiveSupport::Multibyte::Chars#[-start, len]"
+    as_mb[-1024, 1024]
+  }
+end
