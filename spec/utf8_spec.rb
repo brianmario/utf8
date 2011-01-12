@@ -60,24 +60,39 @@ describe String::UTF8 do
   end
 
   context "#[]" do
-    it "character by index should be utf8-aware" do
-      @char_array.each_with_index do |char, i|
-        utf8_char = @utf8[i]
-        utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
-        utf8_char.should eql(char)
+    context "[offset] syntax" do
+      it "should be utf8-aware" do
+        @char_array.each_with_index do |char, i|
+          utf8_char = @utf8[i]
+          utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
+          utf8_char.should eql(char)
+        end
+      end
+
+      it "should support negative indices" do
+        @utf8[-5].should eql(@char_array[-5])
+      end
+
+      it "should return nil for out of range indices" do
+        @utf8[100].should be_nil
+        @utf8[-100].should be_nil
       end
     end
 
-    it "substring by start and length should be utf8-aware" do
-      @utf8[1, 4].should eql(@char_array[1, 4].join)
-      @utf8[0, 6].should eql(@char_array[0, 6].join)
+    context "[offset, length] syntax" do
+      it "should be utf8-aware" do
+        @utf8[1, 4].should eql(@char_array[1, 4].join)
+        @utf8[0, 6].should eql(@char_array[0, 6].join)
 
-      @utf8[6, 100].should eql(@char_array[6, 100].join)
+        @utf8[6, 100].should eql(@char_array[6, 100].join)
 
-      # we don't support negative starting indices yet
-      lambda {
         @utf8[-1, 2].should eql(@char_array[-1, 2].join)
-      }.should raise_error(ArgumentError)
+      end
+
+      it "should return nil for an out of range offset" do
+        @utf8[100, 100].should be_nil
+        @utf8[-100, 100].should be_nil
+      end
     end
   end
 end

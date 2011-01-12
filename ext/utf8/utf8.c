@@ -121,11 +121,22 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     int8_t curCharLen = 0;
     unsigned char *offset = str;
 
-    if (wantPos < 0) rb_raise(rb_eArgError, "Negative indices aren't supported yet");
+    if (wantPos < 0) {
+      long char_cnt = totalCharCount(str, len);
+      if ((wantPos * -1) > char_cnt) {
+        return Qnil;
+      }
+      wantPos = char_cnt + wantPos;
+    }
 
     // scan until starting position
     curCharLen = charLen(str, len);
     while (curPos < wantPos) {
+      // if we're about to step out of bounds, return nil
+      if ((size_t)(str-start) >= len) {
+        return Qnil;
+      }
+
       str += curCharLen;
       curCharLen = charLen(str, len);
       curPos++;
@@ -137,14 +148,14 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     str += curCharLen;
     curCharLen = charLen(str, len);
     while (curPos < wantLen) {
-      str += curCharLen;
-      curCharLen = charLen(str, len);
-      curPos++;
-
       // if we're about to step out of bounds, stop
       if ((size_t)(str-start) >= len) {
         break;
       }
+
+      str += curCharLen;
+      curCharLen = charLen(str, len);
+      curPos++;
     }
 
     return AS_UTF8(rb_str_new((char *)offset, str-offset));
@@ -159,10 +170,21 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     long wantPos = NUM2LONG(argv[0]), curPos = 0;
     int8_t curCharLen = 0;
 
-    if (wantPos < 0) rb_raise(rb_eArgError, "Negative indices aren't supported yet");
+    if (wantPos < 0) {
+      long char_cnt = totalCharCount(str, len);
+      if ((wantPos * -1) > char_cnt) {
+        return Qnil;
+      }
+      wantPos = char_cnt + wantPos;
+    }
 
     curCharLen = charLen(str, len);
     while (curPos < wantPos) {
+      // if we're about to step out of bounds, return nil
+      if ((size_t)(str-start) >= len) {
+        return Qnil;
+      }
+
       str += curCharLen;
       curCharLen = charLen(str, len);
       curPos++;
