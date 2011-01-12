@@ -89,9 +89,10 @@ describe String::UTF8 do
         @utf8[-1, 2].should eql(@char_array[-1, 2].join)
       end
 
-      it "should return nil for an out of range offset" do
+      it "should return nil for an out of range offset or length" do
         @utf8[100, 100].should be_nil
         @utf8[-100, 100].should be_nil
+        @utf8[0, -100].should be_nil
       end
     end
   end

@@ -121,6 +121,10 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     int8_t curCharLen = 0;
     unsigned char *offset = str;
 
+    if (wantLen < 0) {
+      return Qnil;
+    }
+
     if (wantPos < 0) {
       long char_cnt = totalCharCount(str, len);
       if ((wantPos * -1) > char_cnt) {
