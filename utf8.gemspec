@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = [
     "README.rdoc"
   ]
-  s.files = [".gitignore", "MIT-LICENSE", "README.rdoc", "Rakefile", "benchmark/active_support.rb", "benchmark/test.txt", "ext/utf8/ext.c", "ext/utf8/ext.h", "ext/utf8/extconf.rb", "ext/utf8/string_scanner_utf8.c", "ext/utf8/string_scanner_utf8.h", "ext/utf8/string_utf8.c", "ext/utf8/string_utf8.h", "ext/utf8/utf8.c", "ext/utf8/utf8.h", "lib/utf8.rb", "lib/utf8/string.rb", "lib/utf8/string_scanner.rb", "utf8.gemspec"]
+  s.files = [".gitignore", "MIT-LICENSE", "README.rdoc", "Rakefile", "benchmark/active_support.rb", "benchmark/test.txt", "ext/utf8/ext.c", "ext/utf8/ext.h", "ext/utf8/extconf.rb", "ext/utf8/string_scanner_utf8.c", "ext/utf8/string_scanner_utf8.h", "ext/utf8/string_utf8.c", "ext/utf8/string_utf8.h", "ext/utf8/utf8.c", "ext/utf8/utf8.h", "lib/utf8.rb", "lib/utf8/string.rb", "lib/utf8/string_scanner.rb", "spec/spec_helper.rb", "spec/string_scanner_spec.rb", "spec/string_spec.rb", "utf8.gemspec"]
   s.homepage = %q{http://github.com/brianmario/utf8}
   s.require_paths = ["lib", "ext"]
   s.rubygems_version = %q{1.4.2}
