@@ -4,11 +4,14 @@ The scanning code is implemented in C (would love a Java version as well, if any
 
 == Example
 
+  # String (on 1.8)
   str = "你好世界"
   str.length # 12
   str[0] # 228
   str.chars.to_a.inspect # ["\344", "\275", "\240", "\345", "\245", "\275", "\344", "\270", "\226", "\347", "\225", "\214"]
 
+
+  # String::UTF8 (on 1.8)
   utf8_str = "你好世界".as_utf8
   utf8_str.length # 4
   utf8[0] # 你
