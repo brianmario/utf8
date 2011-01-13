@@ -23,6 +23,15 @@ struct strscanner {
     Data_Get_Struct(obj, struct strscanner, var);                                      \
     if (NIL_P(var->str)) rb_raise(rb_eArgError, "uninitialized StringScanner object");
 
+/*
+ * Document-class: StringScanner::UTF8
+ */
+
+/*
+ * call-seq: getch
+ *
+ * Works like StringScanner#getch but is UTF8-aware
+ */
 static VALUE rb_cStringScanner_UTF8_getch(VALUE self) {
   unsigned char *str;
   size_t len;
