@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdint.h>
 
-/* C shit */
 #define CHECK_LEN if ((size_t)(in-start) >= in_len) return 0;
 
+/*
+ * Scans the current position of the buffer
+ * returning the length of this UTF8 character
+ */
 static inline int8_t utf8CharLen(unsigned char *in, size_t in_len) {
   if (in_len > 0) {
     unsigned char curChar, *start;
@@ -55,6 +58,10 @@ static inline int8_t utf8CharLen(unsigned char *in, size_t in_len) {
   return -1;
 }
 
+/*
+ * Scans the current position of the buffer
+ * returning the total number of UTF8 characters found
+ */
 static size_t utf8CharCount(unsigned char *in, size_t in_len) {
   size_t total = 0, leftOver = in_len;
   int8_t len = 0;
@@ -72,7 +79,9 @@ static size_t utf8CharCount(unsigned char *in, size_t in_len) {
   return total;
 }
 
-/* Ruby shit */
+
+
+
 #include <ruby.h>
 static VALUE intern_as_utf8;
 
@@ -87,6 +96,16 @@ static rb_encoding *utf8Encoding;
 #define AS_UTF8(_str) _str = rb_funcall(_str, intern_as_utf8, 0)
 #endif
 
+/*
+ * Document-class: String::UTF8
+ */
+/*
+ * Document-method: length
+ *
+ * call-seq: length
+ *
+ * Returns the number of UTF8 characters in this string
+ */
 static VALUE rb_cString_UTF8_length(VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self);
   size_t len = RSTRING_LEN(self);
@@ -97,6 +116,13 @@ static VALUE rb_cString_UTF8_length(VALUE self) {
   return INT2FIX(utf8_len);
 }
 
+/*
+ * Document-method: each_char
+ *
+ * call-seq: each_char {|utf8_char| ...}
+ *
+ * Iterates over the string, yielding one UTF8 character at a time
+ */
 static VALUE rb_cString_UTF8_each_char(VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self);
   size_t len = RSTRING_LEN(self), i=0;
@@ -117,6 +143,14 @@ static VALUE rb_cString_UTF8_each_char(VALUE self) {
   return self;
 }
 
+/*
+ * Document-method: []
+ *
+ * Works like String#[] but taking into account UTF8 character boundaries
+ *
+ * This method doesn't currently (and may never) support Regexp parameters
+ * It also doesn't support a String parameter (yet)
+ */
 static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self), *start = str;
   size_t len = RSTRING_LEN(self);
