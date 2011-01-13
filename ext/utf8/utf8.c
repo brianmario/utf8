@@ -116,7 +116,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
       rb_raise(rb_eArgError, "Regular Expressions aren't supported yet");
     }
 
-    // [offset,length] syntax
+    // [offset, length] syntax
     long wantPos = NUM2LONG(argv[0]), curPos = 0, wantLen = NUM2LONG(argv[1]);
     int8_t curCharLen = 0;
     unsigned char *offset = str;
