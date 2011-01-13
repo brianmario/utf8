@@ -4,6 +4,7 @@
 /*
  * Document-class: String::UTF8
  */
+
 /*
  * Document-method: length
  *
