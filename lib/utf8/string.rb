@@ -1,5 +1,5 @@
 class String
-  # Wraps our string in an UTF8-aware helper class
+  # Wraps your string in an UTF8-aware version of String
   def as_utf8
     String::UTF8.new(self)
   end

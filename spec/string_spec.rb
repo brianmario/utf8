@@ -9,7 +9,7 @@ describe String::UTF8 do
     @utf8_len = @char_array.size
   end
 
-  it "should extend String, adding an as_utf8 method that wraps the string" do
+  it "should extend String, adding an as_utf8 method that returns a String::UTF8 instance" do
     "".should respond_to(:as_utf8)
     "".as_utf8.class.should eql(String::UTF8)
   end

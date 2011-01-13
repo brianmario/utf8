@@ -1,6 +1,8 @@
 #include "ext.h"
 #include "utf8.h"
 
+extern VALUE intern_as_utf8;
+
 /*
  * Document-class: String::UTF8
  */
@@ -215,6 +217,4 @@ void init_String_UTF8() {
   rb_define_method(rb_cString_UTF8, "length",    rb_cString_UTF8_length, 0);
   rb_define_method(rb_cString_UTF8, "each_char", rb_cString_UTF8_each_char, 0);
   rb_define_method(rb_cString_UTF8, "[]",        rb_cString_UTF8_slice, -1);
-
-  intern_as_utf8 = rb_intern("as_utf8");
 }
