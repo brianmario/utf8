@@ -6,7 +6,7 @@
 
 #define AS_UTF8(str) rb_funcall(str, intern_as_utf8, 0)
 
-static inline int8_t charLen(unsigned char *in, size_t in_len) {
+static inline int8_t utf8CharLen(unsigned char *in, size_t in_len) {
   if (in_len > 0) {
     unsigned char curChar, *start;
 
@@ -57,14 +57,14 @@ static inline int8_t charLen(unsigned char *in, size_t in_len) {
   return -1;
 }
 
-static size_t totalCharCount(unsigned char *in, size_t in_len) {
+static size_t utf8CharCount(unsigned char *in, size_t in_len) {
   size_t total = 0, leftOver = in_len;
   int8_t len = 0;
   unsigned char *start = in;
 
   if (in_len > 0) {
     while (leftOver) {
-      len = charLen(start, leftOver);
+      len = utf8CharLen(start, leftOver);
       leftOver -= len;
       start += len;
       total++;
@@ -83,7 +83,7 @@ static VALUE rb_cString_UTF8_length(VALUE self) {
   size_t len = RSTRING_LEN(self);
   size_t utf8_len = 0;
 
-  utf8_len = totalCharCount(str, len);
+  utf8_len = utf8CharCount(str, len);
 
   return INT2FIX(utf8_len);
 }
@@ -98,7 +98,7 @@ static VALUE rb_cString_UTF8_each_char(VALUE self) {
   RETURN_ENUMERATOR(self, 0, 0);
 
   for(; i<len; i+=lastCharLen) {
-    lastCharLen = charLen(str, len);
+    lastCharLen = utf8CharLen(str, len);
     rb_yield(AS_UTF8(rb_str_new((char *)str+i, lastCharLen)));
   }
 
@@ -126,7 +126,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     }
 
     if (wantPos < 0) {
-      long char_cnt = totalCharCount(str, len);
+      long char_cnt = utf8CharCount(str, len);
       if ((wantPos * -1) > char_cnt) {
         return Qnil;
       }
@@ -134,7 +134,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     }
 
     // scan until starting position
-    curCharLen = charLen(str, len);
+    curCharLen = utf8CharLen(str, len);
     while (curPos < wantPos) {
       // if we're about to step out of bounds, return nil
       if ((size_t)(str-start) >= len) {
@@ -142,7 +142,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
       }
 
       str += curCharLen;
-      curCharLen = charLen(str, len);
+      curCharLen = utf8CharLen(str, len);
       curPos++;
     }
 
@@ -150,7 +150,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     curPos = 1;
     offset = str;
     str += curCharLen;
-    curCharLen = charLen(str, len);
+    curCharLen = utf8CharLen(str, len);
     while (curPos < wantLen) {
       // if we're about to step out of bounds, stop
       if ((size_t)(str-start) >= len) {
@@ -158,7 +158,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
       }
 
       str += curCharLen;
-      curCharLen = charLen(str, len);
+      curCharLen = utf8CharLen(str, len);
       curPos++;
     }
 
@@ -175,14 +175,14 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     int8_t curCharLen = 0;
 
     if (wantPos < 0) {
-      long char_cnt = totalCharCount(str, len);
+      long char_cnt = utf8CharCount(str, len);
       if ((wantPos * -1) > char_cnt) {
         return Qnil;
       }
       wantPos = char_cnt + wantPos;
     }
 
-    curCharLen = charLen(str, len);
+    curCharLen = utf8CharLen(str, len);
     while (curPos < wantPos) {
       // if we're about to step out of bounds, return nil
       if ((size_t)(str-start) >= len) {
@@ -190,7 +190,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
       }
 
       str += curCharLen;
-      curCharLen = charLen(str, len);
+      curCharLen = utf8CharLen(str, len);
       curPos++;
     }
 
@@ -206,7 +206,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     unsigned char *offset = str;
     VALUE ret;
 
-    char_cnt = totalCharCount(str, len);
+    char_cnt = utf8CharCount(str, len);
     ret = rb_range_beg_len(argv[0], &wantPos, &wantLen, char_cnt, 0);
 
     if (ret == Qnil) {
@@ -220,7 +220,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     }
 
     // scan until starting position
-    curCharLen = charLen(str, len);
+    curCharLen = utf8CharLen(str, len);
     while (curPos < wantPos) {
       // if we're about to step out of bounds, return ""
       if ((size_t)(str-start) >= len) {
@@ -228,7 +228,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
       }
 
       str += curCharLen;
-      curCharLen = charLen(str, len);
+      curCharLen = utf8CharLen(str, len);
       curPos++;
     }
 
@@ -236,7 +236,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     curPos = 1;
     offset = str;
     str += curCharLen;
-    curCharLen = charLen(str, len);
+    curCharLen = utf8CharLen(str, len);
     while (curPos < wantLen) {
       // if we're about to step out of bounds, stop
       if ((size_t)(str-start) >= len) {
@@ -244,7 +244,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
       }
 
       str += curCharLen;
-      curCharLen = charLen(str, len);
+      curCharLen = utf8CharLen(str, len);
       curPos++;
     }
 
