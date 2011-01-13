@@ -4,6 +4,7 @@
 #include "string_scanner_utf8.h"
 
 VALUE intern_as_utf8;
+rb_encoding *utf8Encoding;
 
 void Init_utf8() {
   init_String_UTF8();
