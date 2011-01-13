@@ -7,6 +7,8 @@ class String
   end
 
   class UTF8
+    VERSION = "0.1.0"
+
     def as_raw
       ::String.new(self)
     end
