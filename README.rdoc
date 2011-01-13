@@ -16,7 +16,7 @@ The scanning code is implemented in C (would love a Java version as well, if any
   utf8_str.length # 4
   utf8.chars.to_a.inspect # ["你", "好", "世", "界"]
 
-  utf8[0]        # 你
+  utf8[0]        # => "你"
   utf8_str[0, 3] # => "你好世"
   utf8_str[0..3] # => "你好世界"
 
