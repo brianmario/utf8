@@ -6,8 +6,6 @@
  */
 
 /*
- * Document-method: length
- *
  * call-seq: length
  *
  * Returns the number of UTF8 characters in this string
@@ -23,8 +21,6 @@ static VALUE rb_cString_UTF8_length(VALUE self) {
 }
 
 /*
- * Document-method: each_char
- *
  * call-seq: each_char {|utf8_char| ...}
  *
  * Iterates over the string, yielding one UTF8 character at a time
@@ -50,8 +46,6 @@ static VALUE rb_cString_UTF8_each_char(VALUE self) {
 }
 
 /*
- * Document-method: []
- *
  * Works like String#[] but taking into account UTF8 character boundaries
  *
  * This method doesn't currently (and may never) support Regexp parameters
@@ -219,13 +213,8 @@ void init_String_UTF8() {
   VALUE rb_cString_UTF8 = rb_define_class_under(rb_cString, "UTF8", rb_cString);
 
   rb_define_method(rb_cString_UTF8, "length",    rb_cString_UTF8_length, 0);
-  rb_define_method(rb_cString_UTF8, "size",      rb_cString_UTF8_length, 0);
-
   rb_define_method(rb_cString_UTF8, "each_char", rb_cString_UTF8_each_char, 0);
-  rb_define_method(rb_cString_UTF8, "chars",     rb_cString_UTF8_each_char, 0);
-
   rb_define_method(rb_cString_UTF8, "[]",        rb_cString_UTF8_slice, -1);
-  rb_define_method(rb_cString_UTF8, "slice",     rb_cString_UTF8_slice, -1);
 
   intern_as_utf8 = rb_intern("as_utf8");
 }
