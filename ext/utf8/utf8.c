@@ -196,6 +196,10 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
 
     return AS_UTF8(rb_str_new((char *)str, curCharLen));
   } else {
+    if (TYPE(argv[0]) == T_REGEXP) {
+      rb_raise(rb_eArgError, "Regular Expressions aren't supported yet");
+    }
+
     // [Range] syntax
     long wantPos, curPos = 0, wantLen, char_cnt = 0;
     int8_t curCharLen = 0;

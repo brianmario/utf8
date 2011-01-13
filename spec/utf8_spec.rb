@@ -146,4 +146,16 @@ describe String::UTF8 do
       @utf8[0..-100].should eql("")
     end
   end
+
+  it "[Regexp] syntax shouldn't be supported yet" do
+    lambda {
+      @utf8[/a/]
+    }.should raise_error(ArgumentError)
+  end
+
+  it "[Regexp, match_index] syntax shouldn't be supported yet" do
+    lambda {
+      @utf8[/(a)/, 1]
+    }.should raise_error(ArgumentError)
+  end
 end
