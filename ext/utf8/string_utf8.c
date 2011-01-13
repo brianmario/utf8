@@ -72,6 +72,10 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
 
     if (wantLen < 0) {
       return Qnil;
+    } else if (wantLen == 0) {
+      utf8Str = rb_str_new("", 0);
+      AS_UTF8(utf8Str);
+      return utf8Str;
     }
 
     if (wantPos < 0) {

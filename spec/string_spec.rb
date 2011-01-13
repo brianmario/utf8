@@ -97,6 +97,9 @@ describe String::UTF8 do
 
       utf8_char = @utf8[-1, 100]
       utf8_char.should eql(@char_array[-1, 100].join)
+
+      utf8_char = @utf8[0, 0]
+      utf8_char.should eql(@char_array[0, 0].join)
     end
 
     it "should return nil for an out of range offset or length" do
