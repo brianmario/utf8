@@ -196,8 +196,55 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
 
     return AS_UTF8(rb_str_new((char *)str, curCharLen));
   } else {
-    // [Range] syntax - not supported yet
-    return Qnil;
+    // [Range] syntax
+    long wantPos, curPos = 0, wantLen, char_cnt = 0;
+    int8_t curCharLen = 0;
+    unsigned char *offset = str;
+    VALUE ret;
+
+    char_cnt = totalCharCount(str, len);
+    ret = rb_range_beg_len(argv[0], &wantPos, &wantLen, char_cnt, 0);
+
+    if (ret == Qnil) {
+      return Qnil;
+    } else if (ret == Qfalse) {
+      // TODO: wtf do we do :P
+    }
+
+    if (wantLen == 0) {
+      return AS_UTF8(rb_str_new("", 0));
+    }
+
+    // scan until starting position
+    curCharLen = charLen(str, len);
+    while (curPos < wantPos) {
+      // if we're about to step out of bounds, return ""
+      if ((size_t)(str-start) >= len) {
+        return AS_UTF8(rb_str_new("", 0));
+      }
+
+      str += curCharLen;
+      curCharLen = charLen(str, len);
+      curPos++;
+    }
+
+    // now scan until we have the number of chars asked for
+    curPos = 1;
+    offset = str;
+    str += curCharLen;
+    curCharLen = charLen(str, len);
+    while (curPos < wantLen) {
+      // if we're about to step out of bounds, stop
+      if ((size_t)(str-start) >= len) {
+        break;
+      }
+
+      str += curCharLen;
+      curCharLen = charLen(str, len);
+      curPos++;
+    }
+
+    return AS_UTF8(rb_str_new((char *)offset, str-offset));
   }
 }
 
