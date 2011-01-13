@@ -4,7 +4,10 @@
 #include "string_scanner_utf8.h"
 
 VALUE intern_as_utf8;
+
+#ifdef HAVE_RUBY_ENCODING_H
 rb_encoding *utf8Encoding;
+#endif
 
 void Init_utf8() {
   init_String_UTF8();
