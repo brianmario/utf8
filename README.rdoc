@@ -2,7 +2,9 @@
 
 The scanning code is implemented in C (would love a Java version as well, if any of you want to help with that).
 
-== Example
+== String::UTF8 Example
+
+The String::UTF8#[] API isn't fully supported yet, and may never support regular expressions. I'll update this readme as I make progress.
 
   # String (on 1.8)
   str = "你好世界"
@@ -20,8 +22,25 @@ The scanning code is implemented in C (would love a Java version as well, if any
   utf8_str[0, 3] # => "你好世"
   utf8_str[0..3] # => "你好世界"
 
+== StringScanner::UTF8 Example
+
+The full StringScanner API hasn't been made UTF8-aware yet. I may try and finish it later, but the getch method is all I need at the moment.
+
+  # StringScanner (on 1.8)
+  scanner = StringScanner.new("你好世界")
+  scanner.getch # => "\344"
+
+  # StringScanner::UTF8
+  require 'utf8/string_scanner'
+
+  # NOTE: we could have used scanner.as_utf8 instead
+  utf8_scanner = StringScanner::UTF8.new("你好世界")
+  utf8_scanner.getch # => "你"
+  utf8_scanner.getch # => "好"
+  utf8_scanner.getch # => "世"
+  utf8_scanner.reset
+  utf8_scanner.getch # => "你"
+
 == Disclaimer
 
 I'm only planning on making the methods I need UTF8-aware, if you need others I welcome pull requests :)
-
-The String::UTF8#[] API isn't fully supported yet, and may never support regular expressions. I'll update this readme as I make progress.
