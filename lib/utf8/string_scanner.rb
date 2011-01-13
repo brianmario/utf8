@@ -6,7 +6,7 @@ class StringScanner
   # NOTE: this will lose all state associated with the current StringScanner instance
   # (like the current scan position)
   def as_utf8
-    StringScanner::UTF8.new(self.string)
+    StringScanner::UTF8.new(self.string.as_utf8)
   end
 
   class UTF8
