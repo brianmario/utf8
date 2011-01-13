@@ -4,8 +4,6 @@
 /* C shit */
 #define CHECK_LEN if ((size_t)(in-start) >= in_len) return 0;
 
-#define AS_UTF8(str) rb_funcall(str, intern_as_utf8, 0)
-
 static inline int8_t utf8CharLen(unsigned char *in, size_t in_len) {
   if (in_len > 0) {
     unsigned char curChar, *start;
@@ -78,6 +76,17 @@ static size_t utf8CharCount(unsigned char *in, size_t in_len) {
 #include <ruby.h>
 static VALUE intern_as_utf8;
 
+#ifdef HAVE_RUBY_ENCODING_H
+#include <ruby/encoding.h>
+static rb_encoding *utf8Encoding;
+#define AS_UTF8(_str)                         \
+  _str = rb_funcall(_str, intern_as_utf8, 0); \
+  rb_enc_associate(_str, utf8Encoding);
+
+#else
+#define AS_UTF8(_str) _str = rb_funcall(_str, intern_as_utf8, 0)
+#endif
+
 static VALUE rb_cString_UTF8_length(VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self);
   size_t len = RSTRING_LEN(self);
@@ -92,6 +101,7 @@ static VALUE rb_cString_UTF8_each_char(VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self);
   size_t len = RSTRING_LEN(self), i=0;
   int8_t lastCharLen=0;
+  VALUE utf8Str;
 
   // this will return an Enumerator wrapping this string, yielding this method
   // when Enumerator#each is called
@@ -99,7 +109,9 @@ static VALUE rb_cString_UTF8_each_char(VALUE self) {
 
   for(; i<len; i+=lastCharLen) {
     lastCharLen = utf8CharLen(str, len);
-    rb_yield(AS_UTF8(rb_str_new((char *)str+i, lastCharLen)));
+    utf8Str = rb_str_new((char *)str+i, lastCharLen);
+    AS_UTF8(utf8Str);
+    rb_yield(utf8Str);
   }
 
   return self;
@@ -108,6 +120,7 @@ static VALUE rb_cString_UTF8_each_char(VALUE self) {
 static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self), *start = str;
   size_t len = RSTRING_LEN(self);
+  VALUE utf8Str;
 
   if (len == 0) return Qnil;
 
@@ -162,7 +175,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
       curPos++;
     }
 
-    return AS_UTF8(rb_str_new((char *)offset, str-offset));
+    utf8Str = rb_str_new((char *)offset, str-offset);
+    AS_UTF8(utf8Str);
+    return utf8Str;
   }
 
   if (argc != 1) {
@@ -194,7 +209,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
       curPos++;
     }
 
-    return AS_UTF8(rb_str_new((char *)str, curCharLen));
+    utf8Str = rb_str_new((char *)str, curCharLen);
+    AS_UTF8(utf8Str);
+    return utf8Str;
   } else {
     if (TYPE(argv[0]) == T_REGEXP) {
       rb_raise(rb_eArgError, "Regular Expressions aren't supported yet");
@@ -216,7 +233,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     }
 
     if (wantLen == 0) {
-      return AS_UTF8(rb_str_new("", 0));
+      utf8Str = rb_str_new("", 0);
+      AS_UTF8(utf8Str);
+      return utf8Str;
     }
 
     // scan until starting position
@@ -224,7 +243,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     while (curPos < wantPos) {
       // if we're about to step out of bounds, return ""
       if ((size_t)(str-start) >= len) {
-        return AS_UTF8(rb_str_new("", 0));
+        utf8Str = rb_str_new("", 0);
+        AS_UTF8(utf8Str);
+        return utf8Str;
       }
 
       str += curCharLen;
@@ -248,7 +269,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
       curPos++;
     }
 
-    return AS_UTF8(rb_str_new((char *)offset, str-offset));
+    utf8Str = rb_str_new((char *)offset, str-offset);
+    AS_UTF8(utf8Str);
+    return utf8Str;
   }
 }
 
@@ -265,4 +288,8 @@ void Init_utf8() {
   rb_define_method(rb_cString_UTF8, "slice",     rb_cString_UTF8_slice, -1);
 
   intern_as_utf8 = rb_intern("as_utf8");
+
+#ifdef HAVE_RUBY_ENCODING_H
+  utf8Encoding = rb_utf8_encoding();
+#endif
 }

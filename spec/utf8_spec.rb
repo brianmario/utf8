@@ -53,7 +53,6 @@ describe String::UTF8 do
         i+=1
       end
       joined = @utf8.chars.to_a.join
-      joined.force_encoding('utf-8') if defined? Encoding
       @utf8.should eql(joined)
       @utf8.chars.to_a.size.should eql(@utf8_len)
       @utf8.chars.to_a.should eql(@char_array)
@@ -64,14 +63,12 @@ describe String::UTF8 do
     it "should be utf8-aware" do
       @char_array.each_with_index do |char, i|
         utf8_char = @utf8[i]
-        utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
         utf8_char.should eql(char)
       end
     end
 
     it "should support negative indices" do
       utf8_char = @utf8[-5]
-      utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
       utf8_char.should eql(@char_array[-5])
     end
 
@@ -84,26 +81,21 @@ describe String::UTF8 do
   context "[offset, length] syntax" do
     it "should be utf8-aware" do
       utf8_char = @utf8[1, 4]
-      utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
       utf8_char.should eql(@char_array[1, 4].join)
 
       utf8_char = @utf8[0, 6]
-      utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
       utf8_char.should eql(@char_array[0, 6].join)
 
       # this will fail due to a bug in 1.9
       unless defined? Encoding
         utf8_char = @utf8[6, 100]
-        utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
         utf8_char.should eql(@char_array[6, 100].join)
       end
 
       utf8_char = @utf8[-1, 2]
-      utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
       utf8_char.should eql(@char_array[-1, 2].join)
 
       utf8_char = @utf8[-1, 100]
-      utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
       utf8_char.should eql(@char_array[-1, 100].join)
     end
 
@@ -117,26 +109,21 @@ describe String::UTF8 do
   context "[Range] syntax" do
     it "should be utf8-aware" do
       utf8_char = @utf8[1..4]
-      utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
       utf8_char.should eql(@char_array[1..4].join)
 
       utf8_char = @utf8[0..6]
-      utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
       utf8_char.should eql(@char_array[0..6].join)
 
       # this will fail due to a bug in 1.9
       unless defined? Encoding
         utf8_char = @utf8[6..100]
-        utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
         utf8_char.should eql(@char_array[6..100].join)
       end
 
       utf8_char = @utf8[-1..2]
-      utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
       utf8_char.should eql(@char_array[-1..2].join)
 
       utf8_char = @utf8[-1..100]
-      utf8_char = utf8_char.force_encoding('utf-8') if defined? Encoding
       utf8_char.should eql(@char_array[-1..100].join)
     end
 
