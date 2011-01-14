@@ -8,6 +8,15 @@ describe StringScanner::UTF8 do
     @utf8_scanner = @scanner.as_utf8
   end
 
+  it "should blow up on invalid utf8 chars" do
+    # lets cut right into the middle of a sequence so we know it's bad
+    scanner = StringScanner.new(@char_array.join[0..1]).as_utf8
+
+    lambda {
+      scanner.getch
+    }.should raise_error(ArgumentError)
+  end
+
   it "should extend StringScanner, adding an as_utf8 method that returns a StringScanner::UTF8 instance" do
     @scanner.should respond_to(:as_utf8)
     @scanner.as_utf8.class.should eql(StringScanner::UTF8)

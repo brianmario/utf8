@@ -9,6 +9,23 @@ describe String::UTF8 do
     @utf8_len = @char_array.size
   end
 
+  it "should blow up on invalid utf8 chars" do
+    # lets cut right into the middle of a sequence so we know it's bad
+    utf8 = @str[0..1].as_utf8
+
+    lambda {
+      utf8.length
+    }.should raise_error(ArgumentError)
+
+    lambda {
+      utf8[0, 10]
+    }.should raise_error(ArgumentError)
+
+    lambda {
+      utf8.chars.to_a
+    }.should raise_error(ArgumentError)
+  end
+
   it "should extend String, adding an as_utf8 method that returns a String::UTF8 instance" do
     "".should respond_to(:as_utf8)
     "".as_utf8.class.should eql(String::UTF8)

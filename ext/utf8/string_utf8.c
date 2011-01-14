@@ -15,9 +15,12 @@ extern VALUE intern_as_utf8;
 static VALUE rb_cString_UTF8_length(VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self);
   size_t len = RSTRING_LEN(self);
-  size_t utf8_len = 0;
+  int64_t utf8_len = 0;
 
   utf8_len = utf8CharCount(str, len);
+  if (utf8_len < 0) {
+    rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+  }
 
   return INT2FIX(utf8_len);
 }
@@ -39,6 +42,9 @@ static VALUE rb_cString_UTF8_each_char(VALUE self) {
 
   for(; i<len; i+=lastCharLen) {
     lastCharLen = utf8CharLen(str, len);
+    if (lastCharLen < 0) {
+      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+    }
     utf8Str = rb_str_new((char *)str+i, lastCharLen);
     AS_UTF8(utf8Str);
     rb_yield(utf8Str);
@@ -79,7 +85,10 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     }
 
     if (wantPos < 0) {
-      long char_cnt = utf8CharCount(str, len);
+      int64_t char_cnt = utf8CharCount(str, len);
+      if (char_cnt < 0) {
+        rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+      }
       if ((wantPos * -1) > char_cnt) {
         return Qnil;
       }
@@ -88,6 +97,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
 
     // scan until starting position
     curCharLen = utf8CharLen(str, len);
+    if (curCharLen < 0) {
+      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+    }
     while (curPos < wantPos) {
       // if we're about to step out of bounds, return nil
       if ((size_t)(str-start) >= len) {
@@ -96,6 +108,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
 
       str += curCharLen;
       curCharLen = utf8CharLen(str, len);
+      if (curCharLen < 0) {
+        rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+      }
       curPos++;
     }
 
@@ -104,6 +119,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     offset = str;
     str += curCharLen;
     curCharLen = utf8CharLen(str, len);
+    if (curCharLen < 0) {
+      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+    }
     while (curPos < wantLen) {
       // if we're about to step out of bounds, stop
       if ((size_t)(str-start) >= len) {
@@ -112,6 +130,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
 
       str += curCharLen;
       curCharLen = utf8CharLen(str, len);
+      if (curCharLen < 0) {
+        rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+      }
       curPos++;
     }
 
@@ -130,7 +151,7 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     int8_t curCharLen = 0;
 
     if (wantPos < 0) {
-      long char_cnt = utf8CharCount(str, len);
+      int64_t char_cnt = utf8CharCount(str, len);
       if ((wantPos * -1) > char_cnt) {
         return Qnil;
       }
@@ -138,6 +159,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     }
 
     curCharLen = utf8CharLen(str, len);
+    if (curCharLen < 0) {
+      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+    }
     while (curPos < wantPos) {
       // if we're about to step out of bounds, return nil
       if ((size_t)(str-start) >= len) {
@@ -146,6 +170,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
 
       str += curCharLen;
       curCharLen = utf8CharLen(str, len);
+      if (curCharLen < 0) {
+        rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+      }
       curPos++;
     }
 
@@ -158,7 +185,8 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     }
 
     // [Range] syntax
-    long wantPos, curPos = 0, wantLen, char_cnt = 0;
+    long wantPos, curPos = 0, wantLen;
+    int64_t char_cnt = 0;
     int8_t curCharLen = 0;
     unsigned char *offset = str;
     VALUE ret;
@@ -180,6 +208,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
 
     // scan until starting position
     curCharLen = utf8CharLen(str, len);
+    if (curCharLen < 0) {
+      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+    }
     while (curPos < wantPos) {
       // if we're about to step out of bounds, return ""
       if ((size_t)(str-start) >= len) {
@@ -190,6 +221,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
 
       str += curCharLen;
       curCharLen = utf8CharLen(str, len);
+      if (curCharLen < 0) {
+        rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+      }
       curPos++;
     }
 
@@ -198,6 +232,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
     offset = str;
     str += curCharLen;
     curCharLen = utf8CharLen(str, len);
+    if (curCharLen < 0) {
+      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+    }
     while (curPos < wantLen) {
       // if we're about to step out of bounds, stop
       if ((size_t)(str-start) >= len) {
@@ -206,6 +243,9 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
 
       str += curCharLen;
       curCharLen = utf8CharLen(str, len);
+      if (curCharLen < 0) {
+        rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+      }
       curPos++;
     }
 

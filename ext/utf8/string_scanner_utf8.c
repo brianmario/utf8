@@ -45,6 +45,9 @@ static VALUE rb_cStringScanner_UTF8_getch(VALUE self) {
 
   if (len > 0 && len > scanner->curr) {
     lastCharLen = utf8CharLen(str, len);
+    if (lastCharLen < 0) {
+      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+    }
     utf8Str = rb_str_new((char *)str+scanner->curr, lastCharLen);
     scanner->curr += lastCharLen;
     AS_UTF8(utf8Str);

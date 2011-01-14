@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#define CHECK_LEN if ((size_t)(in-start) >= in_len) return 0;
+#define CHECK_LEN if ((size_t)(in-start) >= in_len) return -1;
 
 /*
  * Scans the current position of the buffer
@@ -62,14 +62,17 @@ inline int8_t utf8CharLen(unsigned char *in, size_t in_len) {
  * Scans the current position of the buffer
  * returning the total number of UTF8 characters found
  */
-size_t utf8CharCount(unsigned char *in, size_t in_len) {
-  size_t total = 0, leftOver = in_len;
+int64_t utf8CharCount(unsigned char *in, size_t in_len) {
+  int64_t total = 0, leftOver = in_len;
   int8_t len = 0;
   unsigned char *start = in;
 
   if (in_len > 0) {
     while (leftOver) {
       len = utf8CharLen(start, leftOver);
+      if (len < 0) {
+        return -1;
+      }
       leftOver -= len;
       start += len;
       total++;
