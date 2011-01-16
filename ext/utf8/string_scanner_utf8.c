@@ -1,5 +1,4 @@
 #include "ext.h"
-#include "ruby/regex.h"
 #include "utf8.h"
 
 extern ID intern_as_utf8;
@@ -15,8 +14,13 @@ struct strscanner {
     long prev; /* legal only when MATCHED_P(s) */
     long curr; /* always legal */
 
+    /*
+     * We never access this member, and would require a shitload of other patching
+     * to work right on other ruby versions
+     *
+     */
     /* the regexp register; legal only when MATCHED_P(s) */
-    struct re_registers regs;
+    /* struct re_registers regs; */
 };
 
 #define GET_SCANNER(obj, var)                                                          \
