@@ -10,7 +10,11 @@ describe StringScanner::UTF8 do
 
   it "should blow up on invalid utf8 chars" do
     # lets cut right into the middle of a sequence so we know it's bad
-    scanner = StringScanner.new(@char_array.join[0..1]).as_utf8
+    str = @char_array.join
+    str.force_encoding('binary') if str.respond_to?(:force_encoding)
+    str = str[0..1]
+    str.force_encoding('utf-8') if str.respond_to?(:force_encoding)
+    scanner = StringScanner.new(str).as_utf8
 
     lambda {
       scanner.getch

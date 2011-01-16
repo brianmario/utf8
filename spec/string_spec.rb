@@ -11,7 +11,10 @@ describe String::UTF8 do
 
   it "should blow up on invalid utf8 chars" do
     # lets cut right into the middle of a sequence so we know it's bad
-    utf8 = @str[0..1].as_utf8
+    @str.force_encoding('binary') if @str.respond_to?(:force_encoding)
+    utf8 = @str[0..1]
+    utf8.force_encoding('utf-8') if utf8.respond_to?(:force_encoding)
+    utf8 = utf8.as_utf8
 
     lambda {
       utf8.length
