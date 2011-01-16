@@ -34,7 +34,7 @@ struct strscanner {
  */
 static VALUE rb_cStringScanner_UTF8_getch(VALUE self) {
   unsigned char *str;
-  size_t len;
+  long len;
   struct strscanner *scanner;
   VALUE utf8Str;
   int8_t lastCharLen=0;
