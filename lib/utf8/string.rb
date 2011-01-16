@@ -5,7 +5,7 @@ class String
   end
 
   class UTF8
-    VERSION = "0.1.1"
+    VERSION = "0.1.2"
 
     # Gives you access to the raw non-UTF8-aware version of the string
     def as_raw
