@@ -2,7 +2,7 @@
 require File.expand_path('../spec_helper', __FILE__)
 
 describe StringScanner::UTF8 do
-  before(:all) do
+  before(:each) do
     @char_array = ["怎", "麼", "也", "沒", "人", "寫", "了", "這", "個", "嗎"]
     @scanner = StringScanner.new(@char_array.join)
     @utf8_scanner = @scanner.as_utf8

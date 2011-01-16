@@ -3,6 +3,7 @@
 
 extern ID intern_as_utf8;
 
+#ifndef RUBINIUS
 struct strscanner {
     /* multi-purpose flags */
     unsigned long flags;
@@ -26,6 +27,7 @@ struct strscanner {
 #define GET_SCANNER(obj, var)                                                          \
     Data_Get_Struct(obj, struct strscanner, var);                                      \
     if (NIL_P(var->str)) rb_raise(rb_eArgError, "uninitialized StringScanner object");
+#endif
 
 /*
  * Document-class: StringScanner::UTF8
@@ -38,22 +40,36 @@ struct strscanner {
  */
 static VALUE rb_cStringScanner_UTF8_getch(VALUE self) {
   unsigned char *str;
-  long len;
-  struct strscanner *scanner;
-  VALUE utf8Str;
+  long len = 0, pos = 0;
+  VALUE utf8Str, curStr;
   int8_t lastCharLen=0;
+  
+#ifndef RUBINIUS
+  struct strscanner *scanner;
   GET_SCANNER(self, scanner);
 
-  str = (unsigned char *)RSTRING_PTR(scanner->str);
-  len = RSTRING_LEN(scanner->str);
+  curStr = scanner->str;
+  pos = scanner->curr;
+#else
+  curStr = rb_iv_get(self, "@string");
+  pos = FIX2LONG(rb_iv_get(self, "@pos"));
+#endif
 
-  if (len > 0 && len > scanner->curr) {
+  str = (unsigned char *)RSTRING_PTR(curStr);
+  len = RSTRING_LEN(curStr);
+
+  if (len > 0 && len > pos) {
     lastCharLen = utf8CharLen(str, len);
     if (lastCharLen < 0) {
       rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
     }
-    utf8Str = rb_str_new((char *)str+scanner->curr, lastCharLen);
-    scanner->curr += lastCharLen;
+    utf8Str = rb_str_new((char *)str+pos, lastCharLen);
+    pos += lastCharLen;
+#ifndef RUBINIUS
+    scanner->curr = pos;
+#else
+    rb_iv_set(self, "@pos", LONG2FIX(pos));
+#endif
     AS_UTF8(utf8Str);
     return utf8Str;
   } else {

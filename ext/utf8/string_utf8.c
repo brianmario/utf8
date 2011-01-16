@@ -30,7 +30,7 @@ static VALUE rb_cString_UTF8_length(VALUE self) {
  *
  * Iterates over the string, yielding one UTF8 character at a time
  */
-static VALUE rb_cString_UTF8_each_char(VALUE self) {
+static VALUE rb_cString_UTF8_each_char(int argc, VALUE *argv, VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self);
   size_t len = RSTRING_LEN(self), i=0;
   int8_t lastCharLen=0;
@@ -38,7 +38,9 @@ static VALUE rb_cString_UTF8_each_char(VALUE self) {
 
   // this will return an Enumerator wrapping this string, yielding this method
   // when Enumerator#each is called
-  RETURN_ENUMERATOR(self, 0, 0);
+  if (!rb_block_given_p()) {
+    return rb_funcall(self, rb_intern("to_enum"), 1, ID2SYM(rb_intern("each_char")));
+  }
 
   for(; i<len; i+=lastCharLen) {
     lastCharLen = utf8CharLen(str, len);
@@ -259,6 +261,6 @@ void init_String_UTF8() {
   VALUE rb_cString_UTF8 = rb_define_class_under(rb_cString, "UTF8", rb_cString);
 
   rb_define_method(rb_cString_UTF8, "length",    rb_cString_UTF8_length, 0);
-  rb_define_method(rb_cString_UTF8, "each_char", rb_cString_UTF8_each_char, 0);
+  rb_define_method(rb_cString_UTF8, "each_char", rb_cString_UTF8_each_char, -1);
   rb_define_method(rb_cString_UTF8, "[]",        rb_cString_UTF8_slice, -1);
 }
