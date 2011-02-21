@@ -13,49 +13,39 @@ as_mb = ActiveSupport::Multibyte::Chars.new(raw)
 times = 1000
 
 puts "String::UTF8"
-Benchmark.bmbm do |x|
-  x.report {
-    puts "#length"
+Benchmark.bmbm { |x|
+  x.report("#length") {
     times.times {utf8.length}
   }
-  x.report {
-    puts "#[index]"
+  x.report("#[index]") {
     times.times {utf8[1024]}
   }
-  x.report {
-    puts "#[-index]"
+  x.report("#[-index]") {
     times.times {utf8[-1024]}
   }
-  x.report {
-    puts "#[start, len]"
+  x.report("#[start, len]") {
     times.times {utf8[1024, 1024]}
   }
-  x.report {
-    puts "#[-start, len]"
+  x.report("#[-start, len]") {
     times.times {utf8[-1024, 1024]}
   }
-end
+}
 
 puts "\n\nActiveSupport::Multibyte::Chars"
-Benchmark.bmbm do |x|
-  x.report {
-    puts "#length"
+Benchmark.bmbm { |x|
+  x.report("#length") {
     times.times {as_mb.length}
   }
-  x.report {
-    puts "#[index]"
+  x.report("#[index]") {
     times.times {as_mb[1024]}
   }
-  x.report {
-    puts "#[-index]"
+  x.report("#[-index]") {
     times.times {as_mb[-1024]}
   }
-  x.report {
-    puts "#[start, len]"
+  x.report("#[start, len]") {
     times.times {as_mb[1024, 1024]}
   }
-  x.report {
-    puts "#[-start, len]"
+  x.report("#[-start, len]") {
     times.times {as_mb[-1024, 1024]}
   }
-end
+}
