@@ -5,7 +5,7 @@
 
 /*
  * Scans the current position of the buffer
- * returning the length of this UTF8 character
+ * returning the length of this UTF-8 character
  */
 inline int8_t utf8CharLen(unsigned char *in, size_t in_len) {
   if (in_len > 0) {
@@ -60,7 +60,7 @@ inline int8_t utf8CharLen(unsigned char *in, size_t in_len) {
 
 /*
  * Scans the current position of the buffer
- * returning the total number of UTF8 characters found
+ * returning the total number of UTF-8 characters found
  */
 int64_t utf8CharCount(unsigned char *in, size_t in_len) {
   int64_t total = 0, leftOver = in_len;
@@ -80,4 +80,26 @@ int64_t utf8CharCount(unsigned char *in, size_t in_len) {
   }
 
   return total;
+}
+
+/*
+ * Scans the current position of the buffer
+ * returning the codepoint for the UTF-8 character at this position
+ */
+int32_t utf8CharToCodepoint(unsigned char *in, size_t in_len) {
+  int32_t cp, ncp, len;
+
+  len = utf8CharLen(in, in_len);
+  cp = *in++;
+  if (len > 1) {
+    len--;
+    ncp = cp & ((1 << (6 - len)) - 1);
+    while (len--) {
+      cp = *in++;
+      ncp = (ncp << 6) | (cp & ((1 << 6) - 1));
+    }
+    return ncp;
+  } else {
+    return cp;
+  }
 }

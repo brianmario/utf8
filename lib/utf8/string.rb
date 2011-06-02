@@ -13,5 +13,6 @@ class String
     alias :size  :length
     alias :chars :each_char
     alias :slice :[]
+    alias :codepoints :each_codepoint
   end
 end

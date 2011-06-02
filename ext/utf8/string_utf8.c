@@ -4,13 +4,13 @@
 extern VALUE intern_as_utf8;
 
 /*
- * Document-class: String::UTF8
+ * Document-class: String::UTF-8
  */
 
 /*
  * call-seq: length
  *
- * Returns the number of UTF8 characters in this string
+ * Returns the number of UTF-8 characters in this string
  */
 static VALUE rb_cString_UTF8_length(VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self);
@@ -28,7 +28,7 @@ static VALUE rb_cString_UTF8_length(VALUE self) {
 /*
  * call-seq: each_char {|utf8_char| ...}
  *
- * Iterates over the string, yielding one UTF8 character at a time
+ * Iterates over the string, yielding one UTF-8 character at a time
  */
 static VALUE rb_cString_UTF8_each_char(int argc, VALUE *argv, VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self);
@@ -56,7 +56,36 @@ static VALUE rb_cString_UTF8_each_char(int argc, VALUE *argv, VALUE self) {
 }
 
 /*
- * Works like String#[] but taking into account UTF8 character boundaries
+ * call-seq: each_codepoint {|utf8_codepoint| ...}
+ *
+ * Iterates over the string, yielding one UTF-8 codepoint at a time
+ */
+static VALUE rb_cString_UTF8_each_codepoint(int argc, VALUE *argv, VALUE self) {
+  unsigned char *str = (unsigned char *)RSTRING_PTR(self);
+  size_t len = RSTRING_LEN(self), i=0;
+  int8_t lastCharLen=0;
+  int32_t cp;
+
+  // this will return an Enumerator wrapping this string, yielding this method
+  // when Enumerator#each is called
+  if (!rb_block_given_p()) {
+    return rb_funcall(self, rb_intern("to_enum"), 1, ID2SYM(rb_intern("each_codepoint")));
+  }
+
+  for(; i<len; i+=lastCharLen) {
+    lastCharLen = utf8CharLen(str, len);
+    if (lastCharLen < 0) {
+      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+    }
+    cp = utf8CharToCodepoint(str+i, lastCharLen);
+    rb_yield(INT2FIX(cp));
+  }
+
+  return self;
+}
+
+/*
+ * Works like String#[] but taking into account UTF-8 character boundaries
  *
  * This method doesn't currently (and may never) support Regexp parameters
  * It also doesn't support a String parameter (yet)
@@ -263,4 +292,5 @@ void init_String_UTF8() {
   rb_define_method(rb_cString_UTF8, "length",    rb_cString_UTF8_length, 0);
   rb_define_method(rb_cString_UTF8, "each_char", rb_cString_UTF8_each_char, -1);
   rb_define_method(rb_cString_UTF8, "[]",        rb_cString_UTF8_slice, -1);
+  rb_define_method(rb_cString_UTF8, "each_codepoint", rb_cString_UTF8_each_codepoint, -1);
 }

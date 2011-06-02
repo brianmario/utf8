@@ -7,6 +7,7 @@ describe String::UTF8 do
     @str = @char_array.join
     @utf8 = @str.as_utf8
     @utf8_len = @char_array.size
+    @codepoints = @char_array.map{|c| c.unpack 'U'}
   end
 
   it "should blow up on invalid utf8 chars" do
@@ -67,15 +68,32 @@ describe String::UTF8 do
       end
 
       @utf8.chars.class.should eql(klass)
-      i=0
       @utf8.chars do |char|
         char.should_not be_nil
-        i+=1
       end
       joined = @utf8.chars.to_a.join
       @utf8.should eql(joined)
       @utf8.chars.to_a.size.should eql(@utf8_len)
       @utf8.chars.to_a.should eql(@char_array)
+    end
+  end
+
+  context "#codepoints and #each_codepoint" do
+    it "should be utf8-aware" do
+      klass = begin
+        if defined? Encoding
+          Enumerator
+        else
+          Enumerable::Enumerator
+        end
+      end
+
+      @utf8.codepoints.class.should eql(klass)
+      @utf8.codepoints do |codepoint|
+        codepoint.should_not be_nil
+      end
+      @utf8.codepoints.to_a.size.should eql(@codepoints.size)
+      @utf8.codepoints.to_a.should eql(@codepoints)
     end
   end
 
