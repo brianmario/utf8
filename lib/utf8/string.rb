@@ -4,7 +4,7 @@ class String
     String::UTF8.new(self)
   end
 
-  class UTF8
+  class UTF8 < ::String
     # Gives you access to the raw non-UTF8-aware version of the string
     def as_raw
       ::String.new(self)

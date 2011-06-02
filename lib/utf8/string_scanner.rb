@@ -9,7 +9,7 @@ class StringScanner
     StringScanner::UTF8.new(self.string.as_utf8)
   end
 
-  class UTF8
+  class UTF8 < ::StringScanner
     # Returns a non-UTF8-aware version of StringScanner wrapping your original string
     #
     # NOTE: this will lose all state associated with the current StringScanner::UTF8 instance
