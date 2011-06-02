@@ -10,7 +10,7 @@ extern VALUE intern_as_utf8;
 /*
  * call-seq: length
  *
- * Returns the number of UTF-8 characters in this string
+ * Returns: a Fixnum - the number of UTF-8 characters in this string
  */
 static VALUE rb_cString_UTF8_length(VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self);
@@ -29,6 +29,8 @@ static VALUE rb_cString_UTF8_length(VALUE self) {
  * call-seq: each_char {|utf8_char| ...}
  *
  * Iterates over the string, yielding one UTF-8 character at a time
+ *
+ * Returns: self
  */
 static VALUE rb_cString_UTF8_each_char(int argc, VALUE *argv, VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self);
@@ -59,6 +61,8 @@ static VALUE rb_cString_UTF8_each_char(int argc, VALUE *argv, VALUE self) {
  * call-seq: each_codepoint {|utf8_codepoint| ...}
  *
  * Iterates over the string, yielding one UTF-8 codepoint at a time
+ *
+ * Returns: self
  */
 static VALUE rb_cString_UTF8_each_codepoint(int argc, VALUE *argv, VALUE self) {
   unsigned char *str = (unsigned char *)RSTRING_PTR(self);
