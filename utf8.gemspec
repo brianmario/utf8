@@ -1,4 +1,4 @@
-require './lib/mysql2/version'
+require './lib/utf8/version'
 
 Gem::Specification.new do |s|
   s.name = %q{utf8}
