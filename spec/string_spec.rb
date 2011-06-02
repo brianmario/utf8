@@ -7,7 +7,7 @@ describe String::UTF8 do
     @str = @char_array.join
     @utf8 = @str.as_utf8
     @utf8_len = @char_array.size
-    @codepoints = @char_array.map{|c| c.unpack 'U'}
+    @codepoints = @char_array.map{|c| c.unpack('U').first}
   end
 
   it "should blow up on invalid utf8 chars" do
