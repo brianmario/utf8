@@ -175,6 +175,26 @@ describe String::UTF8 do
     end
   end
 
+  context "#valid?" do
+    it "should test validity" do
+      # lets cut right into the middle of a sequence so we know it's bad
+      @str.force_encoding('binary') if @str.respond_to?(:force_encoding)
+      utf8 = @str[0..1]
+      utf8.force_encoding('utf-8') if utf8.respond_to?(:force_encoding)
+      utf8 = utf8.as_utf8
+
+      utf8.valid?.should be_false
+      @utf8.valid?.should be_true
+    end
+
+    it "should test validity using a maximum codepoint" do
+      highest_codepoint = @utf8.codepoints.to_a.max
+
+      @utf8.valid?(highest_codepoint).should be_true
+      @utf8.valid?(highest_codepoint-1).should be_false
+    end
+  end
+
   it "[Regexp] syntax shouldn't be supported yet" do
     lambda {
       @utf8[/a/]

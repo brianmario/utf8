@@ -89,6 +89,43 @@ static VALUE rb_cString_UTF8_each_codepoint(int argc, VALUE *argv, VALUE self) {
 }
 
 /*
+ * call-seq: valid?(max_codepoint=nil)
+ *
+ * Iterates over the string, yielding one UTF-8 codepoint at a time
+ *
+ * max_codepoint - an optional Fixnum used to declare this string invalid
+ *                 if a codepoint higher than that value is found
+ *                 if nothing is passed, the UTF-8 maximum of 0x10FFFF is assumed
+ *
+ * Returns: a Boolean - true if the string is valid, false if not
+ */
+static VALUE rb_cString_UTF8_valid(int argc, VALUE *argv, VALUE self) {
+  unsigned char *str = (unsigned char *)RSTRING_PTR(self);
+  size_t len = RSTRING_LEN(self), i=0;
+  int8_t lastCharLen=0;
+  int32_t cp, cp_max = -1;
+  VALUE rb_cp_max;
+
+  if (rb_scan_args(argc, argv, "01", &rb_cp_max) == 1) {
+    Check_Type(rb_cp_max, T_FIXNUM);
+    cp_max = FIX2INT(rb_cp_max);
+  }
+
+  for(; i<len; i+=lastCharLen) {
+    lastCharLen = utf8CharLen(str, len);
+    if (lastCharLen < 0) {
+      return Qfalse;
+    }
+    cp = utf8CharToCodepoint(str+i, lastCharLen);
+    if (cp_max >= 0 && cp > cp_max) {
+      return Qfalse;
+    }
+  }
+
+  return Qtrue;
+}
+
+/*
  * Works like String#[] but taking into account UTF-8 character boundaries
  *
  * This method doesn't currently (and may never) support Regexp parameters
@@ -297,4 +334,5 @@ void init_String_UTF8() {
   rb_define_method(rb_cString_UTF8, "each_char", rb_cString_UTF8_each_char, -1);
   rb_define_method(rb_cString_UTF8, "[]",        rb_cString_UTF8_slice, -1);
   rb_define_method(rb_cString_UTF8, "each_codepoint", rb_cString_UTF8_each_codepoint, -1);
+  rb_define_method(rb_cString_UTF8, "valid?", rb_cString_UTF8_valid, -1);
 }
