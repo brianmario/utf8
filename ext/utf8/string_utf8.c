@@ -3,6 +3,8 @@
 
 extern VALUE intern_as_utf8;
 
+#define REPLACEMENT_CHAR '?'
+
 /*
  * Document-class: String::UTF-8
  */
@@ -327,6 +329,42 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
   }
 }
 
+/*
+ * call-seq: clean
+ *
+ * Iterates over the string, replacing invalid UTF-8 characters with '?'
+ *
+ * Returns: a new String
+ */
+static VALUE rb_cString_UTF8_clean(VALUE self) {
+  unsigned char *str;
+  unsigned char *out;
+  unsigned char replace;
+  size_t len;
+  int8_t curCharLen;
+  size_t i;
+  VALUE rb_out;
+
+  str = (unsigned char *)RSTRING_PTR(self);
+  len = RSTRING_LEN(self);
+  replace = REPLACEMENT_CHAR;
+  out = xmalloc(len);
+
+  for(i=0; i<len; i++) {
+    curCharLen = utf8CharLen(str+i, len);
+    if (curCharLen < 0) {
+      *(out+i) = replace;
+    } else {
+      *(out+i) = *(str+i);
+    }
+  }
+
+  rb_out = rb_str_new((const char*)out, len);
+  AS_UTF8(rb_out);
+
+  return rb_out;
+}
+
 void init_String_UTF8() {
   VALUE rb_cString_UTF8 = rb_define_class_under(rb_cString, "UTF8", rb_cString);
 
@@ -335,4 +373,5 @@ void init_String_UTF8() {
   rb_define_method(rb_cString_UTF8, "[]",        rb_cString_UTF8_slice, -1);
   rb_define_method(rb_cString_UTF8, "each_codepoint", rb_cString_UTF8_each_codepoint, -1);
   rb_define_method(rb_cString_UTF8, "valid?", rb_cString_UTF8_valid, -1);
+  rb_define_method(rb_cString_UTF8, "clean", rb_cString_UTF8_clean, 0);
 }

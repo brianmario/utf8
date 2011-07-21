@@ -50,6 +50,12 @@ describe String::UTF8 do
     @utf8.chars.to_a[0].class.should eql(String::UTF8)
   end
 
+  it "clean should replace invalid utf8 chars with '?'" do
+    orig = "provided by Cristian Rodr\355guez."
+    clean = "provided by Cristian Rodr?guez."
+    orig.as_utf8.clean.should eql(clean)
+  end
+
   context "#length and #size" do
     it "should be utf8-aware" do
       @utf8.length.should eql(@utf8_len)
