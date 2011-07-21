@@ -362,6 +362,8 @@ static VALUE rb_cString_UTF8_clean(VALUE self) {
   rb_out = rb_str_new((const char*)out, len);
   AS_UTF8(rb_out);
 
+  xfree(out);
+
   return rb_out;
 }
 
