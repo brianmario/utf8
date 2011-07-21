@@ -185,6 +185,8 @@ describe String::UTF8 do
 
       utf8.valid?.should be_false
       @utf8.valid?.should be_true
+
+      "provided by Cristian Rodr\355guez.".as_utf8.should_not be_valid
     end
 
     it "should test validity using a maximum codepoint" do

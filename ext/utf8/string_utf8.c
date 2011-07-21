@@ -112,7 +112,7 @@ static VALUE rb_cString_UTF8_valid(int argc, VALUE *argv, VALUE self) {
   }
 
   for(; i<len; i+=lastCharLen) {
-    lastCharLen = utf8CharLen(str, len);
+    lastCharLen = utf8CharLen(str+i, len);
     if (lastCharLen < 0) {
       return Qfalse;
     }
