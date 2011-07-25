@@ -337,31 +337,41 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
  * Returns: a new String
  */
 static VALUE rb_cString_UTF8_clean(VALUE self) {
-  unsigned char *str;
-  unsigned char *out;
-  size_t len;
+  unsigned char *inBuf, *inBufCur;
+  unsigned char *outBuf, *outBufCur;
+  size_t len, i;
   int8_t curCharLen;
-  size_t i;
   VALUE rb_out;
 
-  str = (unsigned char *)RSTRING_PTR(self);
+  inBuf = (unsigned char *)RSTRING_PTR(self);
+  inBufCur = inBuf;
   len = RSTRING_LEN(self);
-  out = xmalloc(len);
+  outBuf = xmalloc(len);
+  outBufCur = outBuf;
 
   for(i=0; i<len; i+=curCharLen) {
-    curCharLen = utf8CharLen(str+i, len);
+    curCharLen = utf8CharLen(inBufCur, len);
     if (curCharLen < 0) {
-      *(out+i) = REPLACEMENT_CHAR;
+      if (inBufCur-inBuf > 0) {
+        memcpy(outBufCur, inBuf, inBufCur-inBuf);
+        outBufCur += inBufCur-inBuf;
+      }
+      *outBufCur++ = REPLACEMENT_CHAR;
+      inBuf += (inBufCur-inBuf)+1;
       curCharLen = 1;
-    } else {
-      memcpy(out+i, str+i, curCharLen);
     }
+
+    inBufCur += curCharLen;
   }
 
-  rb_out = rb_str_new((const char*)out, len);
+  if (inBufCur-inBuf > 0) {
+    memcpy(outBufCur, inBuf, inBufCur-inBuf);
+  }
+
+  rb_out = rb_str_new((const char*)outBuf, len);
   AS_UTF8(rb_out);
 
-  xfree(out);
+  xfree(outBuf);
 
   return rb_out;
 }
