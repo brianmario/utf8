@@ -350,12 +350,13 @@ static VALUE rb_cString_UTF8_clean(VALUE self) {
   replace = REPLACEMENT_CHAR;
   out = xmalloc(len);
 
-  for(i=0; i<len; i++) {
+  for(i=0; i<len; i+=curCharLen) {
     curCharLen = utf8CharLen(str+i, len);
     if (curCharLen < 0) {
       *(out+i) = replace;
+      curCharLen = 1;
     } else {
-      *(out+i) = *(str+i);
+      memcpy(out+i, str+i, curCharLen);
     }
   }
 

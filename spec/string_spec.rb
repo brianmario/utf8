@@ -56,6 +56,10 @@ describe String::UTF8 do
     orig.as_utf8.clean.should eql(clean)
   end
 
+  it "clean should not replace valid utf8 chars with '?'" do
+    '→'.as_utf8.clean.should eql('→')
+  end
+
   context "#length and #size" do
     it "should be utf8-aware" do
       @utf8.length.should eql(@utf8_len)
