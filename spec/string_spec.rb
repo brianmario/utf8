@@ -54,10 +54,14 @@ describe String::UTF8 do
     orig = "provided by Cristian Rodr\355guez."
     clean = "provided by Cristian Rodr?guez."
     orig.as_utf8.clean.should eql(clean)
+    "asdf24\206\222asdf24".as_utf8.clean.should eql("asdf24??asdf24")
+    "asdf24\342asdf24".as_utf8.clean.should eql("asdf24?asdf24")
+    "asdf24\342\206asdf24".as_utf8.clean.should eql("asdf24??asdf24")
+    "asdf24\222asdf24".as_utf8.clean.should eql("asdf24?asdf24")
   end
 
   it "clean should not replace valid utf8 chars with '?'" do
-    '→'.as_utf8.clean.should eql('→')
+    "asdf24\342\206\222asdf24".as_utf8.clean.should eql("asdf24\342\206\222asdf24")
   end
 
   context "#length and #size" do
