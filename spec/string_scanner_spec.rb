@@ -2,13 +2,13 @@
 require File.expand_path('../spec_helper', __FILE__)
 
 describe StringScanner::UTF8 do
-  before(:each) do
+  before :each do
     @char_array = ["怎", "麼", "也", "沒", "人", "寫", "了", "這", "個", "嗎"]
     @scanner = StringScanner.new(@char_array.join)
     @utf8_scanner = @scanner.as_utf8
   end
 
-  it "should blow up on invalid utf8 chars" do
+  test "should blow up on invalid utf8 chars" do
     # lets cut right into the middle of a sequence so we know it's bad
     str = @char_array.join
     str.force_encoding('binary') if str.respond_to?(:force_encoding)
@@ -16,34 +16,34 @@ describe StringScanner::UTF8 do
     str.force_encoding('utf-8') if str.respond_to?(:force_encoding)
     scanner = StringScanner.new(str).as_utf8
 
-    lambda {
+    assert_raise ArgumentError do
       scanner.getch
-    }.should raise_error(ArgumentError)
+    end
   end
 
-  it "should extend StringScanner, adding an as_utf8 method that returns a StringScanner::UTF8 instance" do
-    @scanner.should respond_to(:as_utf8)
-    @scanner.as_utf8.class.should eql(StringScanner::UTF8)
+  test "should extend StringScanner, adding an as_utf8 method that returns a StringScanner::UTF8 instance" do
+    assert @scanner.respond_to?(:as_utf8)
+    assert_equal StringScanner::UTF8, @scanner.as_utf8.class
   end
 
-  it "should allow access to a regular (non-utf8-aware) StringScanner based on it's string" do
+  test "should allow access to a regular (non-utf8-aware) StringScanner based on it's string" do
     raw = @utf8_scanner.as_raw
-    raw.class.should eql(StringScanner)
-    raw.string.should eql(@utf8_scanner.string)
+    assert_equal StringScanner, raw.class
+    assert_equal @utf8_scanner.string, raw.string
   end
 
-  it "#getch should be utf8-aware" do
+  test "#getch should be utf8-aware" do
     i=0
     while char = @utf8_scanner.getch
-      char.should eql(@char_array[i])
+      assert_equal @char_array[i], char
       i+=1
     end
   end
 
-  it "should be able to be reset" do
+  test "should be able to be reset" do
     i=0
     while char = @utf8_scanner.getch
-      char.should eql(@char_array[i])
+      assert_equal @char_array[i], char
       if i == 4
         break
       end
@@ -54,7 +54,7 @@ describe StringScanner::UTF8 do
 
     i=0
     while char = @utf8_scanner.getch
-      char.should eql(@char_array[i])
+      assert_equal @char_array[i], char
       i+=1
     end
   end

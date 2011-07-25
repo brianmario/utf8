@@ -2,7 +2,7 @@
 require File.expand_path('../spec_helper', __FILE__)
 
 describe String::UTF8 do
-  before(:each) do
+  before :each do
     @char_array = ["怎", "麼", "也", "沒", "人", "寫", "了", "這", "個", "嗎"]
     @str = @char_array.join
     @utf8 = @str.as_utf8
@@ -10,69 +10,69 @@ describe String::UTF8 do
     @codepoints = @char_array.map{|c| c.unpack('U').first}
   end
 
-  it "should blow up on invalid utf8 chars" do
+  test "should blow up on invalid utf8 chars" do
     # lets cut right into the middle of a sequence so we know it's bad
     @str.force_encoding('binary') if @str.respond_to?(:force_encoding)
     utf8 = @str[0..1]
     utf8.force_encoding('utf-8') if utf8.respond_to?(:force_encoding)
     utf8 = utf8.as_utf8
 
-    lambda {
+    assert_raise ArgumentError do
       utf8.length
-    }.should raise_error(ArgumentError)
+    end
 
-    lambda {
+    assert_raise ArgumentError do
       utf8[0, 10]
-    }.should raise_error(ArgumentError)
+    end
 
-    lambda {
+    assert_raise ArgumentError do
       utf8.chars.to_a
-    }.should raise_error(ArgumentError)
-  end
-
-  it "should extend String, adding an as_utf8 method that returns a String::UTF8 instance" do
-    "".should respond_to(:as_utf8)
-    "".as_utf8.class.should eql(String::UTF8)
-  end
-
-  it "should allow access to the underlying raw string" do
-    raw = @utf8.as_raw
-    raw.class.should eql(String)
-    if defined? Encoding
-      raw.length.should eql(@utf8_len)
-    else
-      raw.length.should eql(@str.size)
     end
   end
 
-  it "should wrap all returned strings to be utf8-aware" do
-    @utf8[0].class.should eql(String::UTF8)
-    @utf8.chars.to_a[0].class.should eql(String::UTF8)
+  test "should extend String, adding an as_utf8 method that returns a String::UTF8 instance" do
+    assert "".respond_to?(:as_utf8)
+    assert_equal String::UTF8, "".as_utf8.class
   end
 
-  it "clean should replace invalid utf8 chars with '?'" do
+  test "should allow access to the underlying raw string" do
+    raw = @utf8.as_raw
+    assert_equal String, raw.class
+    if defined? Encoding
+      assert_equal @utf8_len, raw.length
+    else
+      assert_equal @str.size, raw.length
+    end
+  end
+
+  test "should wrap all returned strings to be utf8-aware" do
+    assert_equal String::UTF8, @utf8[0].class
+    assert_equal String::UTF8, @utf8.chars.to_a[0].class
+  end
+
+  test "clean should replace invalid utf8 chars with '?'" do
     orig = "provided by Cristian Rodr\355guez."
     clean = "provided by Cristian Rodr?guez."
-    orig.as_utf8.clean.should eql(clean)
-    "asdf24\206\222asdf24".as_utf8.clean.should eql("asdf24??asdf24")
-    "asdf24\342asdf24".as_utf8.clean.should eql("asdf24?asdf24")
-    "asdf24\342\206asdf24".as_utf8.clean.should eql("asdf24??asdf24")
-    "asdf24\222asdf24".as_utf8.clean.should eql("asdf24?asdf24")
+    assert_equal clean, orig.as_utf8.clean
+    assert_equal "asdf24??asdf24", "asdf24\206\222asdf24".as_utf8.clean
+    assert_equal "asdf24?asdf24", "asdf24\342asdf24".as_utf8.clean
+    assert_equal "asdf24??asdf24", "asdf24\342\206asdf24".as_utf8.clean
+    assert_equal "asdf24?asdf24", "asdf24\222asdf24".as_utf8.clean
   end
 
-  it "clean should not replace valid utf8 chars with '?'" do
-    "asdf24\342\206\222asdf24".as_utf8.clean.should eql("asdf24\342\206\222asdf24")
+  test "clean should not replace valid utf8 chars with '?'" do
+    assert_equal "asdf24\342\206\222asdf24", "asdf24\342\206\222asdf24".as_utf8.clean
   end
 
   context "#length and #size" do
-    it "should be utf8-aware" do
-      @utf8.length.should eql(@utf8_len)
-      @utf8.size.should eql(@utf8_len)
+    test "should be utf8-aware" do
+      assert_equal @utf8_len, @utf8.length
+      assert_equal @utf8_len, @utf8.size
     end
   end
 
   context "#chars and #each_char" do
-    it "should be utf8-aware" do
+    test "should be utf8-aware" do
       klass = begin
         if defined? Encoding
           Enumerator
@@ -81,19 +81,19 @@ describe String::UTF8 do
         end
       end
 
-      @utf8.chars.class.should eql(klass)
+      assert_equal klass, @utf8.chars.class
       @utf8.chars do |char|
-        char.should_not be_nil
+        assert !char.nil?
       end
       joined = @utf8.chars.to_a.join
-      @utf8.should eql(joined)
-      @utf8.chars.to_a.size.should eql(@utf8_len)
-      @utf8.chars.to_a.should eql(@char_array)
+      assert_equal joined, @utf8
+      assert_equal @utf8_len, @utf8.chars.to_a.size
+      assert_equal @char_array, @utf8.chars.to_a
     end
   end
 
   context "#codepoints and #each_codepoint" do
-    it "should be utf8-aware" do
+    test "should be utf8-aware" do
       klass = begin
         if defined? Encoding
           Enumerator
@@ -102,124 +102,108 @@ describe String::UTF8 do
         end
       end
 
-      @utf8.codepoints.class.should eql(klass)
+      assert_equal klass, @utf8.codepoints.class
       @utf8.codepoints do |codepoint|
-        codepoint.should_not be_nil
+        assert !codepoint.nil?
       end
-      @utf8.codepoints.to_a.size.should eql(@codepoints.size)
-      @utf8.codepoints.to_a.should eql(@codepoints)
+      assert_equal @codepoints.size, @utf8.codepoints.to_a.size
+      assert_equal @codepoints, @utf8.codepoints.to_a
     end
   end
 
   context "[offset] syntax" do
-    it "should be utf8-aware" do
+    test "should be utf8-aware" do
       @char_array.each_with_index do |char, i|
         utf8_char = @utf8[i]
-        utf8_char.should eql(char)
+        assert_equal char, utf8_char
       end
     end
 
-    it "should support negative indices" do
+    test "should support negative indices" do
       utf8_char = @utf8[-5]
-      utf8_char.should eql(@char_array[-5])
+      assert_equal @char_array[-5], utf8_char
     end
 
-    it "should return nil for out of range indices" do
-      @utf8[100].should be_nil
-      @utf8[-100].should be_nil
+    test "should return nil for out of range indices" do
+      assert @utf8[100].nil?
+      assert @utf8[-100].nil?
     end
   end
 
   context "[offset, length] syntax" do
-    it "should be utf8-aware" do
-      utf8_char = @utf8[1, 4]
-      utf8_char.should eql(@char_array[1, 4].join)
-
-      utf8_char = @utf8[0, 6]
-      utf8_char.should eql(@char_array[0, 6].join)
+    test "should be utf8-aware" do
+      assert_equal @char_array[1, 4].join, @utf8[1, 4]
+      assert_equal @char_array[0, 6].join, @utf8[0, 6]
 
       # this will fail due to a bug in 1.9
       unless defined? Encoding
-        utf8_char = @utf8[6, 100]
-        utf8_char.should eql(@char_array[6, 100].join)
+        assert_equal @char_array[6, 100].join, @utf8[6, 100]
       end
 
-      utf8_char = @utf8[-1, 2]
-      utf8_char.should eql(@char_array[-1, 2].join)
-
-      utf8_char = @utf8[-1, 100]
-      utf8_char.should eql(@char_array[-1, 100].join)
-
-      utf8_char = @utf8[0, 0]
-      utf8_char.should eql(@char_array[0, 0].join)
+      assert_equal @char_array[-1, 2].join, @utf8[-1, 2]
+      assert_equal @char_array[-1, 100].join, @utf8[-1, 100]
+      assert_equal @char_array[0, 0].join, @utf8[0, 0]
     end
 
-    it "should return nil for an out of range offset or length" do
-      @utf8[100, 100].should be_nil
-      @utf8[-100, 100].should be_nil
-      @utf8[0, -100].should be_nil
+    test "should return nil for an out of range offset or length" do
+      assert @utf8[100, 100].nil?
+      assert @utf8[-100, 100].nil?
+      assert @utf8[0, -100].nil?
     end
   end
 
   context "[Range] syntax" do
-    it "should be utf8-aware" do
-      utf8_char = @utf8[1..4]
-      utf8_char.should eql(@char_array[1..4].join)
-
-      utf8_char = @utf8[0..6]
-      utf8_char.should eql(@char_array[0..6].join)
+    test "should be utf8-aware" do
+      assert_equal @char_array[1..4].join, @utf8[1..4]
+      assert_equal @char_array[0..6].join, @utf8[0..6]
 
       # this will fail due to a bug in 1.9
       unless defined? Encoding
-        utf8_char = @utf8[6..100]
-        utf8_char.should eql(@char_array[6..100].join)
+        assert_equal @char_array[6..100].join, @utf8[6..100]
       end
 
-      utf8_char = @utf8[-1..2]
-      utf8_char.should eql(@char_array[-1..2].join)
-
-      utf8_char = @utf8[-1..100]
-      utf8_char.should eql(@char_array[-1..100].join)
+      assert_equal @char_array[-1..2].join, @utf8[-1..2]
+      assert_equal @char_array[-1..100].join, @utf8[-1..100]
     end
 
-    it "should return nil for an out of range offset or length" do
-      @utf8[100..100].should be_nil
-      @utf8[-100..100].should be_nil
-      @utf8[0..-100].should eql("")
+    test "should return nil for an out of range offset or length" do
+      assert @utf8[100..100].nil?
+      assert @utf8[-100..100].nil?
+      assert_equal "", @utf8[0..-100]
     end
   end
 
   context "#valid?" do
-    it "should test validity" do
+    test "should test validity" do
       # lets cut right into the middle of a sequence so we know it's bad
       @str.force_encoding('binary') if @str.respond_to?(:force_encoding)
       utf8 = @str[0..1]
       utf8.force_encoding('utf-8') if utf8.respond_to?(:force_encoding)
       utf8 = utf8.as_utf8
 
-      utf8.valid?.should be_false
-      @utf8.valid?.should be_true
+      assert !utf8.valid?
+      assert @utf8.valid?
 
-      "provided by Cristian Rodr\355guez.".as_utf8.should_not be_valid
+      assert !"provided by Cristian Rodr\355guez.".as_utf8.valid?
     end
 
-    it "should test validity using a maximum codepoint" do
+    test "should test validity using a maximum codepoint" do
       highest_codepoint = @utf8.codepoints.to_a.max
 
-      @utf8.valid?(highest_codepoint).should be_true
-      @utf8.valid?(highest_codepoint-1).should be_false
+      assert @utf8.valid?(highest_codepoint)
+      assert !@utf8.valid?(highest_codepoint-1)
     end
   end
 
-  it "[Regexp] syntax shouldn't be supported yet" do
-    lambda {
+  test "[Regexp] syntax shouldn't be supported yet" do
+    assert_raise ArgumentError do
       @utf8[/a/]
-    }.should raise_error(ArgumentError)
+    end
   end
 
-  it "[Regexp, match_index] syntax shouldn't be supported yet" do
-    lambda {
+  test "[Regexp, match_index] syntax shouldn't be supported yet" do
+    assert_raise ArgumentError do
       @utf8[/(a)/, 1]
-    }.should raise_error(ArgumentError)
+    end
   end
 end
