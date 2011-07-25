@@ -339,7 +339,6 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
 static VALUE rb_cString_UTF8_clean(VALUE self) {
   unsigned char *str;
   unsigned char *out;
-  unsigned char replace;
   size_t len;
   int8_t curCharLen;
   size_t i;
@@ -347,13 +346,12 @@ static VALUE rb_cString_UTF8_clean(VALUE self) {
 
   str = (unsigned char *)RSTRING_PTR(self);
   len = RSTRING_LEN(self);
-  replace = REPLACEMENT_CHAR;
   out = xmalloc(len);
 
   for(i=0; i<len; i+=curCharLen) {
     curCharLen = utf8CharLen(str+i, len);
     if (curCharLen < 0) {
-      *(out+i) = replace;
+      *(out+i) = REPLACEMENT_CHAR;
       curCharLen = 1;
     } else {
       memcpy(out+i, str+i, curCharLen);
