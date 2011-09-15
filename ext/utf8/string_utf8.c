@@ -379,9 +379,9 @@ static VALUE rb_cString_UTF8_clean(VALUE self) {
 void init_String_UTF8() {
   VALUE rb_cString_UTF8 = rb_define_class_under(rb_cString, "UTF8", rb_cString);
 
-  rb_define_method(rb_cString_UTF8, "length",    rb_cString_UTF8_length, 0);
+  rb_define_method(rb_cString_UTF8, "length", rb_cString_UTF8_length, 0);
   rb_define_method(rb_cString_UTF8, "each_char", rb_cString_UTF8_each_char, -1);
-  rb_define_method(rb_cString_UTF8, "[]",        rb_cString_UTF8_slice, -1);
+  rb_define_method(rb_cString_UTF8, "[]", rb_cString_UTF8_slice, -1);
   rb_define_method(rb_cString_UTF8, "each_codepoint", rb_cString_UTF8_each_codepoint, -1);
   rb_define_method(rb_cString_UTF8, "valid?", rb_cString_UTF8_valid, -1);
   rb_define_method(rb_cString_UTF8, "clean", rb_cString_UTF8_clean, 0);
