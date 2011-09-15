@@ -206,4 +206,14 @@ describe String::UTF8 do
       @utf8[/(a)/, 1]
     end
   end
+
+  context "#ascii_only" do
+    test "should return true for a string within the low ascii range" do
+      assert "asdf".as_utf8.ascii_only?
+    end
+
+    test "should return false for a string within the low ascii range" do
+      assert !@char_array.first.as_utf8.ascii_only?
+    end
+  end
 end
