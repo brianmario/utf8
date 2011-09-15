@@ -346,7 +346,7 @@ static VALUE rb_cString_UTF8_clean(VALUE self) {
   inBuf = (unsigned char *)RSTRING_PTR(self);
   inBufCur = inBuf;
   len = RSTRING_LEN(self);
-  outBuf = xmalloc(len);
+  outBuf = malloc(len);
   outBufCur = outBuf;
 
   for(i=0; i<len; i+=curCharLen) {
@@ -371,7 +371,7 @@ static VALUE rb_cString_UTF8_clean(VALUE self) {
   rb_out = rb_str_new((const char*)outBuf, len);
   AS_UTF8(rb_out);
 
-  xfree(outBuf);
+  free(outBuf);
 
   return rb_out;
 }
