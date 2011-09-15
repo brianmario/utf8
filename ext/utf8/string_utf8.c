@@ -93,7 +93,7 @@ static VALUE rb_cString_UTF8_each_codepoint(int argc, VALUE *argv, VALUE self) {
 /*
  * call-seq: valid?(max_codepoint=nil)
  *
- * Iterates over the string, yielding one UTF-8 codepoint at a time
+ * Iterates over the string, returning true/false if it's valid UTF-8
  *
  * max_codepoint - an optional Fixnum used to declare this string invalid
  *                 if a codepoint higher than that value is found
