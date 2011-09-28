@@ -4,4 +4,4 @@ require 'rbconfig'
 $CFLAGS << ' -Wall -funroll-loops'
 $CFLAGS << ' -Wextra -O0 -ggdb3' if ENV['DEBUG']
 
-create_makefile("utf8")
+create_makefile("utf8/utf8")

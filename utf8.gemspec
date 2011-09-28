@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.files = `git ls-files`.split("\n")
   s.homepage = %q{http://github.com/brianmario/utf8}
   s.rdoc_options = ["--charset=UTF-8"]
-  s.require_paths = ["lib", "ext"]
+  s.require_paths = ["lib"]
   s.rubygems_version = %q{1.4.2}
   s.summary = %q{A lightweight UTF8-aware String class meant for use with Ruby 1.8}
   s.test_files = `git ls-files spec`.split("\n")
