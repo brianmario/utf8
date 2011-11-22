@@ -7,7 +7,7 @@
  * Scans the current position of the buffer
  * returning the length of this UTF-8 character
  */
-inline int8_t utf8CharLen(unsigned char *in, size_t in_len) {
+int8_t utf8CharLen(unsigned char *in, size_t in_len) {
   if (in_len > 0) {
     unsigned char curChar, *start;
 
