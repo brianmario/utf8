@@ -343,15 +343,23 @@ static VALUE rb_cString_UTF8_clean(VALUE self) {
   int8_t curCharLen;
   VALUE rb_out;
 
+  outBuf = NULL;
+  outBufCur = NULL;
   inBuf = (unsigned char *)RSTRING_PTR(self);
   inBufCur = inBuf;
   len = RSTRING_LEN(self);
-  outBuf = xmalloc(len);
-  outBufCur = outBuf;
 
   for(i=0; i<len; i+=curCharLen) {
     curCharLen = utf8CharLen(inBufCur, len);
     if (curCharLen < 0) {
+      if (!outBuf) {
+        outBuf = xmalloc(len);
+        outBufCur = outBuf;
+        if (inBufCur-inBuf > 0) {
+          memcpy(outBufCur, inBuf, inBufCur-inBuf);
+        }
+      }
+
       if (inBufCur-inBuf > 0) {
         memcpy(outBufCur, inBuf, inBufCur-inBuf);
         outBufCur += inBufCur-inBuf;
@@ -364,14 +372,18 @@ static VALUE rb_cString_UTF8_clean(VALUE self) {
     inBufCur += curCharLen;
   }
 
-  if (inBufCur-inBuf > 0) {
-    memcpy(outBufCur, inBuf, inBufCur-inBuf);
+  if (outBuf) {
+    if (inBufCur-inBuf > 0) {
+      memcpy(outBufCur, inBuf, inBufCur-inBuf);
+    }
+
+    rb_out = rb_str_new((const char*)outBuf, len);
+    xfree(outBuf);
+
+    AS_UTF8(rb_out);
+  } else {
+    rb_out = self;
   }
-
-  rb_out = rb_str_new((const char*)outBuf, len);
-  AS_UTF8(rb_out);
-
-  xfree(outBuf);
 
   return rb_out;
 }

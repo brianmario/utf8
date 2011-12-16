@@ -64,6 +64,11 @@ describe String::UTF8 do
     assert_equal "asdf24\342\206\222asdf24", "asdf24\342\206\222asdf24".as_utf8.clean
   end
 
+  test "clean should return the passed value if it was valid UTF-8" do
+    orig = "asdfasdf".as_utf8
+    assert_equal orig.object_id, orig.clean.object_id
+  end
+
   context "#length and #size" do
     test "should be utf8-aware" do
       assert_equal @utf8_len, @utf8.length
