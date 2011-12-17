@@ -2,7 +2,7 @@
 
 The scanning code is implemented in C (would love a Java version as well, if any of you want to help with that).
 
-At the moment, this gem is tested on 1.8.7, 1.9.2 and Rubinius 1.2.1dev - it may work on others but ymmv.
+At the moment, this gem is tested on 1.8.7, 1.9.2, 1.9.3 and Rubinius - it may work on others but ymmv.
 
 ## String::UTF8 Example
 
