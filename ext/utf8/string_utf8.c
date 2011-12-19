@@ -1,9 +1,10 @@
 #include "ext.h"
 #include "utf8.h"
+#include "buffer.h"
 
 extern VALUE intern_as_utf8;
 
-#define REPLACEMENT_CHAR '?'
+static const char replacement[3] = {0xef, 0xbf, 0xbd};
 
 /*
  * Document-class: String::UTF-8
@@ -338,13 +339,12 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE rb_cString_UTF8_clean(VALUE self) {
   unsigned char *inBuf, *inBufCur;
-  unsigned char *outBuf, *outBufCur;
+  struct buf *out_buf;
   size_t len, i;
   int8_t curCharLen;
   VALUE rb_out;
 
-  outBuf = NULL;
-  outBufCur = NULL;
+  out_buf = NULL;
   inBuf = (unsigned char *)RSTRING_PTR(self);
   inBufCur = inBuf;
   len = RSTRING_LEN(self);
@@ -352,19 +352,17 @@ static VALUE rb_cString_UTF8_clean(VALUE self) {
   for(i=0; i<len; i+=curCharLen) {
     curCharLen = utf8CharLen(inBufCur, len);
     if (curCharLen < 0) {
-      if (!outBuf) {
-        outBuf = xmalloc(len);
-        outBufCur = outBuf;
+      if (!out_buf) {
+        out_buf = bufnew(128);
+        bufgrow(out_buf, len);
+
         if (inBufCur-inBuf > 0) {
-          memcpy(outBufCur, inBuf, inBufCur-inBuf);
+          bufput(out_buf, (void*)inBuf, inBufCur-inBuf);
         }
       }
 
-      if (inBufCur-inBuf > 0) {
-        memcpy(outBufCur, inBuf, inBufCur-inBuf);
-        outBufCur += inBufCur-inBuf;
-      }
-      *outBufCur++ = REPLACEMENT_CHAR;
+      bufput(out_buf, (void*)(&replacement), 3);
+
       inBuf += (inBufCur-inBuf)+1;
       curCharLen = 1;
     }
@@ -372,13 +370,13 @@ static VALUE rb_cString_UTF8_clean(VALUE self) {
     inBufCur += curCharLen;
   }
 
-  if (outBuf) {
+  if (out_buf) {
     if (inBufCur-inBuf > 0) {
-      memcpy(outBufCur, inBuf, inBufCur-inBuf);
+      bufput(out_buf, (void*)inBuf, inBufCur-inBuf);
     }
 
-    rb_out = rb_str_new((const char*)outBuf, len);
-    xfree(outBuf);
+    rb_out = rb_str_new((const char *)out_buf->data, out_buf->size);
+    bufrelease(out_buf);
 
     AS_UTF8(rb_out);
   } else {

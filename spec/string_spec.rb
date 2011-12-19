@@ -51,13 +51,14 @@ describe String::UTF8 do
   end
 
   test "clean should replace invalid utf8 chars with '?'" do
+    # \357\277\275 == �
     orig = "provided by Cristian Rodr\355guez."
-    clean = "provided by Cristian Rodr?guez."
+    clean = "provided by Cristian Rodr\357\277\275guez."
     assert_equal clean, orig.as_utf8.clean
-    assert_equal "asdf24??asdf24", "asdf24\206\222asdf24".as_utf8.clean
-    assert_equal "asdf24?asdf24", "asdf24\342asdf24".as_utf8.clean
-    assert_equal "asdf24??asdf24", "asdf24\342\206asdf24".as_utf8.clean
-    assert_equal "asdf24?asdf24", "asdf24\222asdf24".as_utf8.clean
+    assert_equal "asdf24\357\277\275\357\277\275asdf24", "asdf24\206\222asdf24".as_utf8.clean
+    assert_equal "asdf24\357\277\275asdf24", "asdf24\342asdf24".as_utf8.clean
+    assert_equal "asdf24\357\277\275\357\277\275asdf24", "asdf24\342\206asdf24".as_utf8.clean
+    assert_equal "asdf24\357\277\275asdf24", "asdf24\222asdf24".as_utf8.clean
   end
 
   test "clean should not replace valid utf8 chars with '?'" do
