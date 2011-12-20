@@ -15,8 +15,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __GEN_BUFFER_H__
-#define __GEN_BUFFER_H__
+#ifndef BUFFER_H__
+#define BUFFER_H__
 
 #include <stddef.h>
 #include <stdarg.h>
@@ -28,29 +28,29 @@
 #endif
 
 typedef enum {
-	BUF_OK = 0,
-	BUF_ENOMEM = -1,
+  BUF_OK = 0,
+  BUF_ENOMEM = -1,
 } buferror_t;
 
 /* struct buf: character array buffer */
 struct buf {
-	uint8_t *data;		/* actual character data */
-	size_t size;	/* size of the string */
-	size_t asize;	/* allocated size (0 = volatile buffer) */
-	size_t unit;	/* reallocation unit size (0 = read-only buffer) */
+  uint8_t *data;    /* actual character data */
+  size_t size;  /* size of the string */
+  size_t asize;  /* allocated size (0 = volatile buffer) */
+  size_t unit;  /* reallocation unit size (0 = read-only buffer) */
 };
 
 /* CONST_BUF: global buffer from a string litteral */
 #define BUF_STATIC(string) \
-	{ (uint8_t *)string, sizeof string -1, sizeof string, 0, 0 }
+  { (uint8_t *)string, sizeof string -1, sizeof string, 0, 0 }
 
 /* VOLATILE_BUF: macro for creating a volatile buffer on the stack */
 #define BUF_VOLATILE(strname) \
-	{ (uint8_t *)strname, strlen(strname), 0, 0, 0 }
+  { (uint8_t *)strname, strlen(strname), 0, 0, 0 }
 
 /* BUFPUTSL: optimized bufputs of a string litteral */
 #define BUFPUTSL(output, literal) \
-	bufput(output, literal, sizeof literal - 1)
+  bufput(output, literal, sizeof literal - 1)
 
 /* bufgrow: increasing the allocated size to the given value */
 int bufgrow(struct buf *, size_t);
@@ -84,8 +84,5 @@ void bufslurp(struct buf *, size_t);
 
 /* bufprintf: formatted printing to a buffer */
 void bufprintf(struct buf *, const char *, ...) __attribute__ ((format (printf, 2, 3)));
-
-/* vbufprintf: stdarg variant of formatted printing into a buffer */
-void vbufprintf(struct buf *, const char * , va_list);
 
 #endif
