@@ -51,6 +51,53 @@ int8_t utf8CharLen(unsigned char *in, size_t in_len) {
           if ((curChar >> 6) == 0x2) return 4;
         }
       }
+    } else if ((curChar >> 2) == 0x3e) {
+      /* five byte */
+      CHECK_LEN;
+      curChar = in[0];
+      in++;
+      if ((curChar >> 6) == 0x2) {
+        CHECK_LEN;
+        curChar = in[0];
+        in++;
+        if ((curChar >> 6) == 0x2) {
+          CHECK_LEN;
+          curChar = in[0];
+          in++;
+          if ((curChar >> 6) == 0x2) {
+            CHECK_LEN;
+            curChar = in[0];
+            in++;
+            if ((curChar >> 6) == 0x2) return 5;
+          }
+        }
+      }
+    } else if ((curChar >> 2) == 0x7e) {
+      /* six byte */
+      CHECK_LEN;
+      curChar = in[0];
+      in++;
+      if ((curChar >> 6) == 0x2) {
+        CHECK_LEN;
+        curChar = in[0];
+        in++;
+        if ((curChar >> 6) == 0x2) {
+          CHECK_LEN;
+          curChar = in[0];
+          in++;
+          if ((curChar >> 6) == 0x2) {
+            CHECK_LEN;
+            curChar = in[0];
+            in++;
+            if ((curChar >> 6) == 0x2) {
+              CHECK_LEN;
+              curChar = in[0];
+              in++;
+              if ((curChar >> 6) == 0x2) return 6;
+            }
+          }
+        }
+      }
     }
   }
 
