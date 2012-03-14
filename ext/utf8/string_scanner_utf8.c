@@ -1,5 +1,5 @@
 #include "ext.h"
-#include "utf8.h"
+#include "utf8proc.h"
 
 extern ID intern_as_utf8;
 
@@ -59,7 +59,7 @@ static VALUE rb_cStringScanner_UTF8_getch(VALUE self) {
   len = RSTRING_LEN(curStr);
 
   if (len > 0 && len > pos) {
-    lastCharLen = utf8CharLen(str, len);
+    lastCharLen = utf8proc_charlen(str, len);
     if (lastCharLen < 0) {
       rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
     }
