@@ -1,6 +1,6 @@
 #include "ext.h"
-#include "utf8.h"
 #include "buffer.h"
+#include "utf8proc.h"
 
 extern VALUE intern_as_utf8;
 
@@ -15,17 +15,15 @@ static const char replacement[3] = {0xef, 0xbf, 0xbd};
  *
  * Returns: a Fixnum - the number of UTF-8 characters in this string
  */
-static VALUE rb_cString_UTF8_length(VALUE self) {
-  unsigned char *str = (unsigned char *)RSTRING_PTR(self);
-  size_t len = RSTRING_LEN(self);
-  int64_t utf8_len = 0;
+static VALUE rb_cString_UTF8_length(VALUE self)
+{
+	ssize_t utf8_len;
 
-  utf8_len = utf8CharCount(str, len);
-  if (utf8_len < 0) {
-    rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-  }
+	utf8_len = utf8proc_strlen((uint8_t *)RSTRING_PTR(self), RSTRING_LEN(self));
+	if (utf8_len < 0)
+		rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
 
-  return INT2FIX(utf8_len);
+	return INT2FIX(utf8_len);
 }
 
 /*
@@ -35,29 +33,32 @@ static VALUE rb_cString_UTF8_length(VALUE self) {
  *
  * Returns: self
  */
-static VALUE rb_cString_UTF8_each_char(int argc, VALUE *argv, VALUE self) {
-  unsigned char *str = (unsigned char *)RSTRING_PTR(self);
-  size_t len = RSTRING_LEN(self), i=0;
-  int8_t lastCharLen=0;
-  VALUE utf8Str;
+static VALUE rb_cString_UTF8_each_char(int argc, VALUE *argv, VALUE self)
+{
+	uint8_t *str = (uint8_t *)RSTRING_PTR(self);
+	size_t len = RSTRING_LEN(self);
+	VALUE utf8Str;
 
-  // this will return an Enumerator wrapping this string, yielding this method
-  // when Enumerator#each is called
-  if (!rb_block_given_p()) {
-    return rb_funcall(self, rb_intern("to_enum"), 1, ID2SYM(rb_intern("each_char")));
-  }
+	/* this will return an Enumerator wrapping this string, yielding this method
+	   when Enumerator#each is called */
+	if (!rb_block_given_p()) {
+		return rb_funcall(self, rb_intern("to_enum"), 1, ID2SYM(rb_intern("each_char")));
+	}
 
-  for(; i<len; i+=lastCharLen) {
-    lastCharLen = utf8CharLen(str, len);
-    if (lastCharLen < 0) {
-      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-    }
-    utf8Str = rb_str_new((char *)str+i, lastCharLen);
-    AS_UTF8(utf8Str);
-    rb_yield(utf8Str);
-  }
+	while (len > 0) {
+		ssize_t char_len = utf8proc_charlen(str, len);
+		if (char_len < 0)
+			rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
 
-  return self;
+		utf8Str = rb_str_new((char *)str, char_len);
+		AS_UTF8(utf8Str);
+		rb_yield(utf8Str);
+
+		str += char_len;
+		len -= char_len;
+	}
+
+	return Qnil;
 }
 
 /*
@@ -67,28 +68,30 @@ static VALUE rb_cString_UTF8_each_char(int argc, VALUE *argv, VALUE self) {
  *
  * Returns: self
  */
-static VALUE rb_cString_UTF8_each_codepoint(int argc, VALUE *argv, VALUE self) {
-  unsigned char *str = (unsigned char *)RSTRING_PTR(self);
-  size_t len = RSTRING_LEN(self), i=0;
-  int8_t lastCharLen=0;
-  int32_t cp;
+static VALUE rb_cString_UTF8_each_codepoint(int argc, VALUE *argv, VALUE self)
+{
+	uint8_t *str = (uint8_t *)RSTRING_PTR(self);
+	size_t len = RSTRING_LEN(self);
+	int32_t codepoint;
 
-  // this will return an Enumerator wrapping this string, yielding this method
-  // when Enumerator#each is called
-  if (!rb_block_given_p()) {
-    return rb_funcall(self, rb_intern("to_enum"), 1, ID2SYM(rb_intern("each_codepoint")));
-  }
+	/* this will return an Enumerator wrapping this string, yielding this method
+	   when Enumerator#each is called */
+	if (!rb_block_given_p()) {
+		return rb_funcall(self, rb_intern("to_enum"), 1, ID2SYM(rb_intern("each_codepoint")));
+	}
 
-  for(; i<len; i+=lastCharLen) {
-    lastCharLen = utf8CharLen(str, len);
-    if (lastCharLen < 0) {
-      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-    }
-    cp = utf8CharToCodepoint(str+i, lastCharLen);
-    rb_yield(INT2FIX(cp));
-  }
+	while (len > 0) {
+		ssize_t char_len = utf8proc_iterate(str, len, &codepoint);
+		if (char_len < 0)
+			rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
 
-  return self;
+		rb_yield(INT2FIX(codepoint));
+
+		str += char_len;
+		len -= char_len;
+	}
+
+	return Qnil;
 }
 
 /*
@@ -102,30 +105,42 @@ static VALUE rb_cString_UTF8_each_codepoint(int argc, VALUE *argv, VALUE self) {
  *
  * Returns: a Boolean - true if the string is valid, false if not
  */
-static VALUE rb_cString_UTF8_valid(int argc, VALUE *argv, VALUE self) {
-  unsigned char *str = (unsigned char *)RSTRING_PTR(self);
-  size_t len = RSTRING_LEN(self), i=0;
-  int8_t lastCharLen=0;
-  int32_t cp, cp_max = -1;
-  VALUE rb_cp_max;
+static VALUE rb_cString_UTF8_valid(int argc, VALUE *argv, VALUE self)
+{
+	uint8_t *str = (uint8_t *)RSTRING_PTR(self);
+	size_t len = RSTRING_LEN(self);
+	VALUE rb_cp_max;
 
-  if (rb_scan_args(argc, argv, "01", &rb_cp_max) == 1) {
-    Check_Type(rb_cp_max, T_FIXNUM);
-    cp_max = FIX2INT(rb_cp_max);
-  }
+	if (rb_scan_args(argc, argv, "01", &rb_cp_max) == 1) {
+		int32_t codepoint, codepoint_max;
 
-  for(; i<len; i+=lastCharLen) {
-    lastCharLen = utf8CharLen(str+i, len);
-    if (lastCharLen < 0) {
-      return Qfalse;
-    }
-    cp = utf8CharToCodepoint(str+i, lastCharLen);
-    if (cp_max >= 0 && cp > cp_max) {
-      return Qfalse;
-    }
-  }
+		/* Check against a maximum codepoint; we need to get
+		 * the codepoint for each char */
 
-  return Qtrue;
+		Check_Type(rb_cp_max, T_FIXNUM);
+		codepoint_max = FIX2INT(rb_cp_max);
+
+		while (len > 0) {
+			ssize_t char_len = utf8proc_iterate(str, len, &codepoint);
+			if (char_len < 0 || codepoint > codepoint_max)
+				return Qfalse;
+
+			str += char_len;
+			len -= char_len;
+		}
+	} else {
+		/* fast check; just make sure that the chars are valid */
+		while (len > 0) {
+			ssize_t char_len = utf8proc_charlen(str, len);
+			if (char_len < 0)
+				return Qfalse;
+
+			str += char_len;
+			len -= char_len;
+		}
+	}
+
+	return Qtrue;
 }
 
 /*
@@ -135,199 +150,199 @@ static VALUE rb_cString_UTF8_valid(int argc, VALUE *argv, VALUE self) {
  * It also doesn't support a String parameter (yet)
  */
 static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
-  unsigned char *str = (unsigned char *)RSTRING_PTR(self), *start = str;
-  size_t len = RSTRING_LEN(self);
-  VALUE utf8Str;
+	unsigned char *str = (unsigned char *)RSTRING_PTR(self), *start = str;
+	size_t len = RSTRING_LEN(self);
+	VALUE utf8Str;
 
-  if (len == 0) return Qnil;
+	if (len == 0) return Qnil;
 
-  if (argc == 2) {
-    if (TYPE(argv[0]) == T_REGEXP) {
-      rb_raise(rb_eArgError, "Regular Expressions aren't supported yet");
-    }
+	if (argc == 2) {
+		if (TYPE(argv[0]) == T_REGEXP) {
+			rb_raise(rb_eArgError, "Regular Expressions aren't supported yet");
+		}
 
-    // [offset, length] syntax
-    long wantPos = NUM2LONG(argv[0]), curPos = 0, wantLen = NUM2LONG(argv[1]);
-    int8_t curCharLen = 0;
-    unsigned char *offset = str;
+		// [offset, length] syntax
+		long wantPos = NUM2LONG(argv[0]), curPos = 0, wantLen = NUM2LONG(argv[1]);
+		int8_t curCharLen = 0;
+		unsigned char *offset = str;
 
-    if (wantLen < 0) {
-      return Qnil;
-    } else if (wantLen == 0) {
-      utf8Str = rb_str_new("", 0);
-      AS_UTF8(utf8Str);
-      return utf8Str;
-    }
+		if (wantLen < 0) {
+			return Qnil;
+		} else if (wantLen == 0) {
+			utf8Str = rb_str_new("", 0);
+			AS_UTF8(utf8Str);
+			return utf8Str;
+		}
 
-    if (wantPos < 0) {
-      int64_t char_cnt = utf8CharCount(str, len);
-      if (char_cnt < 0) {
-        rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-      }
-      if ((wantPos * -1) > char_cnt) {
-        return Qnil;
-      }
-      wantPos = char_cnt + wantPos;
-    }
+		if (wantPos < 0) {
+			int64_t char_cnt = utf8proc_strlen(str, len);
+			if (char_cnt < 0) {
+				rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+			}
+			if ((wantPos * -1) > char_cnt) {
+				return Qnil;
+			}
+			wantPos = char_cnt + wantPos;
+		}
 
-    // scan until starting position
-    curCharLen = utf8CharLen(str, len);
-    if (curCharLen < 0) {
-      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-    }
-    while (curPos < wantPos) {
-      // if we're about to step out of bounds, return nil
-      if ((size_t)(str-start) >= len) {
-        return Qnil;
-      }
+		// scan until starting position
+		curCharLen = utf8proc_charlen(str, len);
+		if (curCharLen < 0) {
+			rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+		}
+		while (curPos < wantPos) {
+			// if we're about to step out of bounds, return nil
+			if ((size_t)(str-start) >= len) {
+				return Qnil;
+			}
 
-      str += curCharLen;
-      curCharLen = utf8CharLen(str, len);
-      if (curCharLen < 0) {
-        rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-      }
-      curPos++;
-    }
+			str += curCharLen;
+			curCharLen = utf8proc_charlen(str, len);
+			if (curCharLen < 0) {
+				rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+			}
+			curPos++;
+		}
 
-    // now scan until we have the number of chars asked for
-    curPos = 1;
-    offset = str;
-    str += curCharLen;
-    curCharLen = utf8CharLen(str, len);
-    if (curCharLen < 0) {
-      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-    }
-    while (curPos < wantLen) {
-      // if we're about to step out of bounds, stop
-      if ((size_t)(str-start) >= len) {
-        break;
-      }
+		// now scan until we have the number of chars asked for
+		curPos = 1;
+		offset = str;
+		str += curCharLen;
+		curCharLen = utf8proc_charlen(str, len);
+		if (curCharLen < 0) {
+			rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+		}
+		while (curPos < wantLen) {
+			// if we're about to step out of bounds, stop
+			if ((size_t)(str-start) >= len) {
+				break;
+			}
 
-      str += curCharLen;
-      curCharLen = utf8CharLen(str, len);
-      if (curCharLen < 0) {
-        rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-      }
-      curPos++;
-    }
+			str += curCharLen;
+			curCharLen = utf8proc_charlen(str, len);
+			if (curCharLen < 0) {
+				rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+			}
+			curPos++;
+		}
 
-    utf8Str = rb_str_new((char *)offset, str-offset);
-    AS_UTF8(utf8Str);
-    return utf8Str;
-  }
+		utf8Str = rb_str_new((char *)offset, str-offset);
+		AS_UTF8(utf8Str);
+		return utf8Str;
+	}
 
-  if (argc != 1) {
-    rb_raise(rb_eArgError, "wrong number of arguments (%d for 1)", argc);
-  }
+	if (argc != 1) {
+		rb_raise(rb_eArgError, "wrong number of arguments (%d for 1)", argc);
+	}
 
-  // [Fixnum] syntax
-  if (TYPE(argv[0]) == T_FIXNUM) {
-    long wantPos = NUM2LONG(argv[0]), curPos = 0;
-    int8_t curCharLen = 0;
+	// [Fixnum] syntax
+	if (TYPE(argv[0]) == T_FIXNUM) {
+		long wantPos = NUM2LONG(argv[0]), curPos = 0;
+		int8_t curCharLen = 0;
 
-    if (wantPos < 0) {
-      int64_t char_cnt = utf8CharCount(str, len);
-      if ((wantPos * -1) > char_cnt) {
-        return Qnil;
-      }
-      wantPos = char_cnt + wantPos;
-    }
+		if (wantPos < 0) {
+			int64_t char_cnt = utf8proc_strlen(str, len);
+			if ((wantPos * -1) > char_cnt) {
+				return Qnil;
+			}
+			wantPos = char_cnt + wantPos;
+		}
 
-    curCharLen = utf8CharLen(str, len);
-    if (curCharLen < 0) {
-      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-    }
-    while (curPos < wantPos) {
-      // if we're about to step out of bounds, return nil
-      if ((size_t)(str-start) >= len) {
-        return Qnil;
-      }
+		curCharLen = utf8proc_charlen(str, len);
+		if (curCharLen < 0) {
+			rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+		}
+		while (curPos < wantPos) {
+			// if we're about to step out of bounds, return nil
+			if ((size_t)(str-start) >= len) {
+				return Qnil;
+			}
 
-      str += curCharLen;
-      curCharLen = utf8CharLen(str, len);
-      if (curCharLen < 0) {
-        rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-      }
-      curPos++;
-    }
+			str += curCharLen;
+			curCharLen = utf8proc_charlen(str, len);
+			if (curCharLen < 0) {
+				rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+			}
+			curPos++;
+		}
 
-    utf8Str = rb_str_new((char *)str, curCharLen);
-    AS_UTF8(utf8Str);
-    return utf8Str;
-  } else {
-    if (TYPE(argv[0]) == T_REGEXP) {
-      rb_raise(rb_eArgError, "Regular Expressions aren't supported yet");
-    }
+		utf8Str = rb_str_new((char *)str, curCharLen);
+		AS_UTF8(utf8Str);
+		return utf8Str;
+	} else {
+		if (TYPE(argv[0]) == T_REGEXP) {
+			rb_raise(rb_eArgError, "Regular Expressions aren't supported yet");
+		}
 
-    // [Range] syntax
-    long wantPos, curPos = 0, wantLen;
-    int64_t char_cnt = 0;
-    int8_t curCharLen = 0;
-    unsigned char *offset = str;
-    VALUE ret;
+		// [Range] syntax
+		long wantPos, curPos = 0, wantLen;
+		int64_t char_cnt = 0;
+		int8_t curCharLen = 0;
+		unsigned char *offset = str;
+		VALUE ret;
 
-    char_cnt = utf8CharCount(str, len);
-    ret = rb_range_beg_len(argv[0], &wantPos, &wantLen, char_cnt, 0);
+		char_cnt = utf8proc_strlen(str, len);
+		ret = rb_range_beg_len(argv[0], &wantPos, &wantLen, char_cnt, 0);
 
-    if (ret == Qnil) {
-      return Qnil;
-    } else if (ret == Qfalse) {
-      // TODO: wtf do we do :P
-    }
+		if (ret == Qnil) {
+			return Qnil;
+		} else if (ret == Qfalse) {
+			// TODO: wtf do we do :P
+		}
 
-    if (wantLen == 0) {
-      utf8Str = rb_str_new("", 0);
-      AS_UTF8(utf8Str);
-      return utf8Str;
-    }
+		if (wantLen == 0) {
+			utf8Str = rb_str_new("", 0);
+			AS_UTF8(utf8Str);
+			return utf8Str;
+		}
 
-    // scan until starting position
-    curCharLen = utf8CharLen(str, len);
-    if (curCharLen < 0) {
-      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-    }
-    while (curPos < wantPos) {
-      // if we're about to step out of bounds, return ""
-      if ((size_t)(str-start) >= len) {
-        utf8Str = rb_str_new("", 0);
-        AS_UTF8(utf8Str);
-        return utf8Str;
-      }
+		// scan until starting position
+		curCharLen = utf8proc_charlen(str, len);
+		if (curCharLen < 0) {
+			rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+		}
+		while (curPos < wantPos) {
+			// if we're about to step out of bounds, return ""
+			if ((size_t)(str-start) >= len) {
+				utf8Str = rb_str_new("", 0);
+				AS_UTF8(utf8Str);
+				return utf8Str;
+			}
 
-      str += curCharLen;
-      curCharLen = utf8CharLen(str, len);
-      if (curCharLen < 0) {
-        rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-      }
-      curPos++;
-    }
+			str += curCharLen;
+			curCharLen = utf8proc_charlen(str, len);
+			if (curCharLen < 0) {
+				rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+			}
+			curPos++;
+		}
 
-    // now scan until we have the number of chars asked for
-    curPos = 1;
-    offset = str;
-    str += curCharLen;
-    curCharLen = utf8CharLen(str, len);
-    if (curCharLen < 0) {
-      rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-    }
-    while (curPos < wantLen) {
-      // if we're about to step out of bounds, stop
-      if ((size_t)(str-start) >= len) {
-        break;
-      }
+		// now scan until we have the number of chars asked for
+		curPos = 1;
+		offset = str;
+		str += curCharLen;
+		curCharLen = utf8proc_charlen(str, len);
+		if (curCharLen < 0) {
+			rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+		}
+		while (curPos < wantLen) {
+			// if we're about to step out of bounds, stop
+			if ((size_t)(str-start) >= len) {
+				break;
+			}
 
-      str += curCharLen;
-      curCharLen = utf8CharLen(str, len);
-      if (curCharLen < 0) {
-        rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
-      }
-      curPos++;
-    }
+			str += curCharLen;
+			curCharLen = utf8proc_charlen(str, len);
+			if (curCharLen < 0) {
+				rb_raise(rb_eArgError, "invalid utf-8 byte sequence");
+			}
+			curPos++;
+		}
 
-    utf8Str = rb_str_new((char *)offset, str-offset);
-    AS_UTF8(utf8Str);
-    return utf8Str;
-  }
+		utf8Str = rb_str_new((char *)offset, str-offset);
+		AS_UTF8(utf8Str);
+		return utf8Str;
+	}
 }
 
 /*
@@ -337,53 +352,52 @@ static VALUE rb_cString_UTF8_slice(int argc, VALUE *argv, VALUE self) {
  *
  * Returns: a new String
  */
-static VALUE rb_cString_UTF8_clean(VALUE self) {
-  unsigned char *inBuf, *inBufCur;
-  struct buf *out_buf;
-  size_t len, i;
-  int8_t curCharLen;
-  VALUE rb_out;
+static VALUE rb_cString_UTF8_clean(VALUE self)
+{
+	uint8_t *str, *str_valid;
+	struct buf *out_buf;
+	size_t len;
 
-  out_buf = NULL;
-  inBuf = (unsigned char *)RSTRING_PTR(self);
-  inBufCur = inBuf;
-  len = RSTRING_LEN(self);
+	out_buf = NULL;
+	str = str_valid = (uint8_t *)RSTRING_PTR(self);
+	len = RSTRING_LEN(self);
 
-  for(i=0; i<len; i+=curCharLen) {
-    curCharLen = utf8CharLen(inBufCur, len);
-    if (curCharLen < 0) {
-      if (!out_buf) {
-        out_buf = bufnew(128);
-        bufgrow(out_buf, len);
+	while (len > 0) {
+		ssize_t char_len = utf8proc_charlen(str, len);
 
-        if (inBufCur-inBuf > 0) {
-          bufput(out_buf, (void*)inBuf, inBufCur-inBuf);
-        }
-      }
+		if (char_len < 0) {
+			if (!out_buf) {
+				out_buf = bufnew(64);
+				bufgrow(out_buf, RSTRING_LEN(self));
+			}
 
-      bufput(out_buf, (void*)(&replacement), 3);
+			if (str > str_valid)
+				bufput(out_buf, (void*)str_valid, str - str_valid);
 
-      inBuf += (inBufCur-inBuf)+1;
-      curCharLen = 1;
-    }
+			bufput(out_buf, replacement, sizeof(replacement));
 
-    inBufCur += curCharLen;
-  }
+			str_valid = str + 1;
+			char_len = 1;
+		}
 
-  if (out_buf) {
-    if (inBufCur-inBuf > 0) {
-      bufput(out_buf, (void*)inBuf, inBufCur-inBuf);
-    }
+		str += char_len;
+		len -= char_len;
+	}
 
-    rb_out = rb_str_new((const char *)out_buf->data, out_buf->size);
-    bufrelease(out_buf);
+	if (out_buf) {
+		VALUE rb_out;
 
-    AS_UTF8(rb_out);
-  } else {
-    rb_out = self;
-  }
+		if (str > str_valid)
+			bufput(out_buf, (void*)str_valid, str - str_valid);
 
-  return rb_out;
+		rb_out = rb_str_new((const char *)out_buf->data, out_buf->size);
+		bufrelease(out_buf);
+		AS_UTF8(rb_out);
+
+		return rb_out;
+	}
+
+	return self;
 }
 
 /*
@@ -393,17 +407,17 @@ static VALUE rb_cString_UTF8_clean(VALUE self) {
  *
  * Returns: a Boolean - true if the string is within the low ASCII range, false if not
  */
-static VALUE rb_cString_UTF8_ascii_only(VALUE self) {
-  unsigned char *str = (unsigned char *)RSTRING_PTR(self);
-  size_t len = RSTRING_LEN(self), i=0;
+static VALUE rb_cString_UTF8_ascii_only(VALUE self)
+{
+	uint8_t *str = (unsigned char *)RSTRING_PTR(self);
+	size_t len = RSTRING_LEN(self), i;
 
-  for(; i<len; i+=1) {
-    if (str[i] > 0x7f) {
-      return Qfalse;
-    }
-  }
+	for(i = 0; i < len; i++) {
+		if (str[i] > 0x7f)
+			return Qfalse;
+	}
 
-  return Qtrue;
+	return Qtrue;
 }
 
 void init_String_UTF8() {
